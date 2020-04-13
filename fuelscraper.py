@@ -61,7 +61,8 @@ for tr in soup.find_all('tr'):
             if len(tab) >= 7:
                 distanceStr=tab[6].string
                 dist=distanceStr[:distanceStr.find("NM")]
-                fboTable.append({'airport':tab[1].string, 'fbo_name':tab[2].string, 'self':tab[3].string, 'full':tab[4].string, 'update':tab[5].string, 'dist':int(dist)})
+                direction=distanceStr[distanceStr.find("@")+2:]
+                fboTable.append({'airport':tab[1].string, 'fbo_name':tab[2].string, 'self':tab[3].string, 'full':tab[4].string, 'update':tab[5].string, 'dist':int(dist), 'direction':direction})
 
 if len(fboTable) == 0:
     sys.exit("No fuel sources found near " + airportCode + ".")
@@ -69,14 +70,18 @@ if len(fboTable) == 0:
 # sort FBOs by distance from airport
 fboTable.sort(key=minDist)
 
-print("-----------100LL PRICES AT " + airportCode + "-----------\n")
+print("")
+print("\t\t\t100LL PRICES @ " + airportCode)
+print("---------------------------------------------------------------------")
 print("\tSELF\tFULL\t\t\tFBO")
 for fbo in fboTable:
     if fbo['airport'] == airportCode or fbo['dist'] == 0:
         print("\t" + fbo['self'] + "\t" + fbo['full'] + "\t\t\t" + fbo['fbo_name'])
 
-print("\n\n-----------100LL PRICES NEARBY-----------\n")
-print("AIRPORT\tSELF\tFULL\tDISTANCE\tFBO")
+print("\n\n\t\t\t100LL PRICES NEARBY")
+print("---------------------------------------------------------------------")
+print("IDENT\tSELF\tFULL\tDIST\tDIRECT\tFBO")
 for fbo in fboTable:
     if fbo['airport'] != airportCode and fbo['dist'] <= maxDist:
-        print(fbo['airport'] + "\t" + fbo['self'] + "\t" + fbo['full'] + "\t" + str(fbo['dist']) + " nm \t\t" + fbo['fbo_name'])
+        print(fbo['airport'] + "\t" + fbo['self'] + "\t" + fbo['full'] + "\t" + str(fbo['dist']) + " nm \t" + fbo['direction'] + "\t" + fbo['fbo_name'])
+print("")
