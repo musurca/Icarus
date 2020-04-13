@@ -1,6 +1,12 @@
 # Icarus
- CLI tools for General Aviation
+ CLI tools for General Aviation.
 
-Requires: wget, BeautifulSoup 4
+Dependencies: wget, BeautifulSoup 4
 
-Airport/navaid data courtesy of ourairports.com. (Last update: April 12, 2020)
+```
+pip install wget
+pip install beautifulsoup4
+
+```
+
+Airport/navaid data courtesy of [OurAirports](http://ourairports.com).
