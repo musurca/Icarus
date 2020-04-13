@@ -3,6 +3,8 @@ airportinfo.py
 
 Displays relevant information about an airport: radio frequencies, runways, etc.
 
+TODO: customize radius of nearby airports
+
 '''
 
 import csv
@@ -26,13 +28,24 @@ def dist_coord(lat1,lon1,lat2,lon2):
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     return 0.539957*R * c
 
+def minDist(e):
+    return e['dist']
+
+def minLength(e):
+    return e['length']
+
 if len(sys.argv) > 1:
     code = sys.argv[1].upper()
 else:
     sys.exit("You must provide an ICAO airport code!")
 
+showHelipads = False
+if len(sys.argv) > 2:
+    if sys.argv[2] == "heli":
+        showHelipads = True
+
 apName = None
-# get basic info
+# find airport info
 with open(DATA_DIR+'airports.csv', newline='') as csvfile:
     airports = csv.DictReader(csvfile)
     for airport in airports:
@@ -43,6 +56,8 @@ with open(DATA_DIR+'airports.csv', newline='') as csvfile:
             apName = airport['name']
             apId = airport['id']
             apElev = airport['elevation_ft']
+            if airport['type'].find("heli") != -1:
+                showHelipads = True
             break
 
 if apName == None:
@@ -62,43 +77,80 @@ print(latText + ", " + longText + ", elev. " + apElev + " ft ASL")
 print("------------------------------------------------------")
 
 # runways
+runwayList = []
 with open(DATA_DIR+'runways.csv', newline='') as csvfile:
     runways = csv.DictReader(csvfile)
     for runway in runways:
         refId = runway['airport_ident']
         if refId == code and runway['closed'] == "0":
-            if runway['le_ident'][0:1] == "H":
-                print("Helipad " + runway['le_ident'] + " -- " + runway['length_ft'] + " ft")
-            else:
-                print("Runway " + runway['le_ident'] + " (" + runway['le_heading_degT'] + "°) / " + runway['he_ident'] + " (" + runway['he_heading_degT'] + "°) -- " + runway['length_ft'] + " ft")
+            runway['length'] = int(runway['length_ft'])
+            runwayList.append(runway)
 
-# navaids
-print("")
-with open(DATA_DIR+'navaids.csv', newline='') as csvfile:
-    navaids = csv.DictReader(csvfile)
-    for navaid in navaids:
-        refId = navaid['associated_airport']
-        if refId == code:
-            navLat = float(navaid['latitude_deg'])
-            navLong = float(navaid['longitude_deg'])
-            dist = dist_coord(apLat, apLong, navLat, navLong)
-            if navaid['frequency_khz'] != "":
-                if navaid['type'] == "NDB":
-                    freq = navaid['frequency_khz'] + " mHz"
-                else:
-                    freq = str(float(navaid['frequency_khz'])/1000) + " mHz"
-            else:
-                freq = ""
-            print(navaid['ident'] + " (" + navaid['name'] + " " + navaid['type'] + ") @ " + freq + " -- " + str(round(dist,2)) + " nm")
+runwayList.sort(key=minLength)
+for runway in runwayList:
+    if runway['le_ident'][0:1] == "H":
+        print("Helipad " + runway['le_ident'] + " -- " + runway['length_ft'] + " ft")
+    else:
+        print("Runway " + runway['le_ident'] + " (" + runway['le_heading_degT'] + "°) / " + runway['he_ident'] + " (" + runway['he_heading_degT'] + "°) -- " + runway['length_ft'] + " ft")
 
 # com frequencies
-print("")
+nearbyComFreqs=[]
 with open(DATA_DIR+'airport-frequencies.csv', newline='') as csvfile:
     freqs = csv.DictReader(csvfile)
     for freq in freqs:
         refId = freq['airport_ident']
         if refId == code:
-            print(freq['type'] + "\t" + freq['frequency_mhz'] + " mHz\t(" + freq['description'] + ")")
+            nearbyComFreqs.append(freq)
 
+if len(nearbyComFreqs) > 0:
+    print("")
+    for freq in nearbyComFreqs:
+        print(freq['type'] + "\t" + freq['frequency_mhz'] + " mHz\t(" + freq['description'] + ")")
+
+# show 5 closest navaids within 30nm
+closenavaids=[]
+with open(DATA_DIR+'navaids.csv', newline='') as csvfile:
+    navaids = csv.DictReader(csvfile)
+    for navaid in navaids:
+        navLat = float(navaid['latitude_deg'])
+        navLong = float(navaid['longitude_deg'])
+        dist = dist_coord(apLat, apLong, navLat, navLong)
+        if dist <= 30:
+            navaid['dist'] = dist
+            closenavaids.append(navaid)
+
+closenavaids.sort(key=minDist)
+if len(closenavaids) > 0:
+    print("")
+    for k in range(min(len(closenavaids),5)):
+        navaid = closenavaids[k]
+        if navaid['frequency_khz'] != "":
+            if navaid['type'] == "NDB":
+                freq = " @ " + navaid['frequency_khz'] + " mHz"
+            else:
+                freq = " @ " + str(float(navaid['frequency_khz'])/1000) + " mHz"
+        else:
+            freq = ""
+        print(str(round(navaid['dist'],2)) + " nm:\t" + navaid['ident'] + " (" + navaid['name'] + " " + navaid['type'] + ")" + freq)
+
+nearbyAirports = []
+# find airports within 20nm
+with open(DATA_DIR+'airports.csv', newline='') as csvfile:
+    airports = csv.DictReader(csvfile)
+    for airport in airports:
+        ident = airport['ident']
+        aLat = float(airport['latitude_deg'])
+        aLong = float(airport['longitude_deg'])
+        dist = dist_coord(apLat, apLong, aLat, aLong)
+        if ident != code and dist <= 20 and (showHelipads or airport['type'].find("airport") != -1):
+            airport['dist'] = dist
+            nearbyAirports.append(airport)
+
+nearbyAirports.sort(key=minDist)
+if len(nearbyAirports) > 0:
+    codeString = nearbyAirports[0]['ident']
+    for k in range(len(nearbyAirports)-1):
+        codeString = codeString + ", " + nearbyAirports[k+1]['ident']
+    print("\nWithin 20nm: " + codeString)
 
 print("")
