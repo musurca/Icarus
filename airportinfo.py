@@ -5,6 +5,9 @@ Displays relevant information about an airport: radio frequencies, runways, etc.
 
 TODO: customize radius of nearby airports
 TODO: find magnetic deviation
+TODO: if you can't find the airport code, try putting a 'K' in front of it
+TODO: if you can't find the airport code and it's 4-letters long, try removing the first letter
+TODO: maybe make this into a general info utility that also works on navaids
 
 '''
 
