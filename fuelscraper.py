@@ -16,6 +16,8 @@ def minDist(e):
 
 if len(sys.argv) > 1:
     airportCode = sys.argv[1].upper()
+    if len(airportCode) < 4:
+        sys.exit("You must provide a four-letter ICAO code!")
 else:
     sys.exit("You must provide an airport ICAO code!")
 
