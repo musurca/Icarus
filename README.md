@@ -3,4 +3,4 @@
 
 Requires: wget, BeautifulSoup 4
 
-CSVs courtesy of ourairports.com
+Airport/navaid data courtesy of ourairports.com. (Last update: April 12, 2020)

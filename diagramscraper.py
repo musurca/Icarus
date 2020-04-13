@@ -53,4 +53,4 @@ pdfLinks = list(dict.fromkeys(pdfLinks)) # remove duplicate urls
 for url in pdfLinks:
     wget.download(url, BASE_PATH + "/" + airportCode)
 
-print("\nDone!")
+print("\nDone! Airport diagrams have been downloaded to " + BASE_PATH + "/" + airportCode + ".")
