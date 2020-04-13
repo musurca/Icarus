@@ -31,6 +31,7 @@ if len(sys.argv) > 1:
 else:
     sys.exit("You must provide an ICAO airport code!")
 
+apName = None
 # get basic info
 with open(DATA_DIR+'airports.csv', newline='') as csvfile:
     airports = csv.DictReader(csvfile)
@@ -42,6 +43,10 @@ with open(DATA_DIR+'airports.csv', newline='') as csvfile:
             apName = airport['name']
             apId = airport['id']
             apElev = airport['elevation_ft']
+            break
+
+if apName == None:
+    sys.exit("Can't find airport " + code + "!")
 
 print("")
 print(apName + " (" + code + ")")
@@ -62,7 +67,10 @@ with open(DATA_DIR+'runways.csv', newline='') as csvfile:
     for runway in runways:
         refId = runway['airport_ident']
         if refId == code and runway['closed'] == "0":
-            print("Runway " + runway['le_ident'] + " (" + runway['le_heading_degT'] + "°) / " + runway['he_ident'] + " (" + runway['he_heading_degT'] + "°) -- " + runway['length_ft'] + " ft")
+            if runway['le_ident'][0:1] == "H":
+                print("Helipad " + runway['le_ident'] + " -- " + runway['length_ft'] + " ft")
+            else:
+                print("Runway " + runway['le_ident'] + " (" + runway['le_heading_degT'] + "°) / " + runway['he_ident'] + " (" + runway['he_heading_degT'] + "°) -- " + runway['length_ft'] + " ft")
 
 # navaids
 print("")

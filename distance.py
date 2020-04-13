@@ -3,6 +3,9 @@ distance.py
 
 Calculates the direct distance between two airport/navaids.
 
+TODO: use region specification just to disambiguate, not to disqualify entirely
+(in case of international trips)
+
 '''
 
 import csv
