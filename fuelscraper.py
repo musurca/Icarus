@@ -16,7 +16,7 @@ def minDist(e):
 
 if len(sys.argv) > 1:
     airportCode = sys.argv[1].upper()
-    if len(airportCode) < 4:
+    if len(airportCode) != 4:
         sys.exit("You must provide a four-letter ICAO code!")
 else:
     sys.exit("You must provide an airport ICAO code!")
@@ -66,22 +66,17 @@ for tr in soup.find_all('tr'):
 if len(fboTable) == 0:
     sys.exit("No fuel sources found near " + airportCode + ".")
 
-if len(airportCode) == 3:
-    kCode = "K" + airportCode
-    pCode = "P" + airportCode
-else:
-    kCode = pCode = airportCode
-
+# sort FBOs by distance from airport
 fboTable.sort(key=minDist)
 
 print("-----------100LL PRICES AT " + airportCode + "-----------\n")
 print("\tSELF\tFULL\t\t\tFBO")
 for fbo in fboTable:
-    if fbo['airport'] == kCode or fbo['airport'] == pCode or fbo['dist'] == 0:
+    if fbo['airport'] == airportCode or fbo['dist'] == 0:
         print("\t" + fbo['self'] + "\t" + fbo['full'] + "\t\t\t" + fbo['fbo_name'])
 
 print("\n\n-----------100LL PRICES NEARBY-----------\n")
 print("AIRPORT\tSELF\tFULL\tDISTANCE\tFBO")
 for fbo in fboTable:
-    if fbo['airport'] != kCode and fbo['airport'] != pCode and fbo['dist'] <= maxDist:
+    if fbo['airport'] != airportCode and fbo['dist'] <= maxDist:
         print(fbo['airport'] + "\t" + fbo['self'] + "\t" + fbo['full'] + "\t" + str(fbo['dist']) + " nm \t\t" + fbo['fbo_name'])
