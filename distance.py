@@ -3,9 +3,6 @@ distance.py
 
 Calculates the direct distance between two airport/navaids.
 
-TODO: use region specification just to disambiguate, not to disqualify entirely
-(in case of international trips)
-
 '''
 
 import csv
@@ -32,6 +29,10 @@ def dist_coord(lat1,lon1,lat2,lon2):
 if len(sys.argv) > 2:
     src = sys.argv[1].upper()
     dst = sys.argv[2].upper()
+
+    if src == dst:
+        sys.exit("Your source and destination are the same!")
+
     if len(sys.argv) > 3:
         region = sys.argv[3].upper()
         anyRegion = False
@@ -41,46 +42,71 @@ if len(sys.argv) > 2:
 else:
     sys.exit("You must provide two ICAO airport/navaid codes and an (optional) region code!")
 
-srcLat = None
-dstLat = None
+possibleSources=[]
+possibleDests=[]
 
-# try airports first
 with open(DATA_DIR+'airports.csv', newline='') as csvfile:
     airports = csv.DictReader(csvfile)
     for airport in airports:
         ident = airport['ident']
-        country = airport['iso_country']
-        if ident == src and (anyRegion or region==country):
-            srcLat = float(airport['latitude_deg'])
-            srcLong = float(airport['longitude_deg'])
-            srcName = airport['name']
-        elif ident == dst and (anyRegion or region==country):
-            dstLat = float(airport['latitude_deg'])
-            dstLong = float(airport['longitude_deg'])
-            dstName = airport['name']
+        if ident == src:
+            possibleSources.append(airport)
+        elif ident == dst:
+            possibleDests.append(airport)
 
-# if we don't have enough data, try navaids next
-if srcLat == None or dstLat == None:
-    with open(DATA_DIR+'navaids.csv', newline='') as csvfile:
-        navaids = csv.DictReader(csvfile)
-        for navaid in navaids:
-            ident = navaid['ident']
-            country = navaid['iso_country']
-            if ident == src and (anyRegion or region==country):
-                srcLat = float(navaid['latitude_deg'])
-                srcLong = float(navaid['longitude_deg'])
-                srcName = navaid['name']
-            elif ident == dst and (anyRegion or region==country):
-                dstLat = float(navaid['latitude_deg'])
-                dstLong = float(navaid['longitude_deg'])
-                dstName = navaid['name']
+with open(DATA_DIR+'navaids.csv', newline='') as csvfile:
+    navaids = csv.DictReader(csvfile)
+    for navaid in navaids:
+        ident = navaid['ident']
+        if ident == src:
+            possibleSources.append(navaid)
+        elif ident == dst:
+            possibleDests.append(navaid)
 
-if srcLat == None or dstLat == None:
-    if srcLat == None:
+if len(possibleSources) == 0 or len(possibleDests) == 0:
+    if len(possibleSources) == 0:
         print("Can't find " + src + "!")
-    if dstLat == None:
+    if len(possibleDests) == 0:
         print("Can't find " + dst + "!")
     sys.exit()
+
+refSource = None
+refDest = None
+
+if len(possibleSources) > 1:
+    for source in possibleSources:
+        country = source['iso_country']
+        if anyRegion or region==country:
+            refSource = source
+            region = country
+            anyRegion = False
+            break
+    if refSource == None:
+        refSource = possibleSources[0]
+        region = possibleSources[0]['iso_country']
+        anyRegion = False
+else:
+    refSource = possibleSources[0]
+    region = possibleSources[0]['iso_country']
+    anyRegion = False
+
+if len(possibleDests) > 1:
+    for dest in possibleDests:
+        country = dest['iso_country']
+        if region==country:
+            refDest = dest
+            break
+    if refDest == None:
+        refDest = possibleDests[0]
+else:
+    refDest = possibleDests[0]
+
+srcLat = float(refSource['latitude_deg'])
+srcLong = float(refSource['longitude_deg'])
+srcName = refSource['name']
+dstLat = float(refDest['latitude_deg'])
+dstLong = float(refDest['longitude_deg'])
+dstName = refDest['name']
 
 dist = dist_coord(srcLat,srcLong,dstLat,dstLong)
 
