@@ -1,1 +1,1 @@
-python3.7 fuelscraper.py $1 $2
+python3.7 fuelscraper.py $1 $2 $3

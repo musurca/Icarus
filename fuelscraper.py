@@ -28,6 +28,11 @@ if len(sys.argv) > 2:
     else:
         sys.exit("Error reading max distance!")
 
+jetFuel = False
+if len(sys.argv) > 3:
+    if sys.argv[3] == "jeta":
+        jetFuel = True
+
 s = requests.Session() 
 fbo_soup = BeautifulSoup(s.get('http://www.100ll.com/searchresults.php?clear_previous=true&searchfor=' + airportCode + '&submit.x=0&submit.y=0').text, features="html.parser")
 
@@ -51,7 +56,13 @@ if scrapeArg == "":
                 scrapeArg = hrefStr[hrefStr.find("?")+1:]
 
 # Plug in HashID and scrape nearby FBOs and their prices
-fuel_price_html = s.get('http://www.100ll.com/shownearbyfuel.php?' + scrapeArg)
+fuelSearchType = "fuel"
+fuelType = "100LL"
+if jetFuel == True:
+    fuelType = "JET-A"
+    fuelSearchType = "jeta"
+
+fuel_price_html = s.get('http://www.100ll.com/shownearby' + fuelSearchType + '.php?' + scrapeArg)
 soup = BeautifulSoup(fuel_price_html.text, features="html.parser")
 fboTable=[]
 for tr in soup.find_all('tr'):
@@ -71,14 +82,14 @@ if len(fboTable) == 0:
 fboTable.sort(key=minDist)
 
 print("")
-print("\t\t\t100LL PRICES @ " + airportCode)
+print("\t\t\t" + fuelType + " PRICES @ " + airportCode)
 print("---------------------------------------------------------------------")
 print("\tSELF\tFULL\t\t\tFBO")
 for fbo in fboTable:
     if fbo['airport'] == airportCode or fbo['dist'] == 0:
         print("\t" + fbo['self'] + "\t" + fbo['full'] + "\t\t\t" + fbo['fbo_name'])
 
-print("\n\n\t\t\t100LL PRICES NEARBY")
+print("\n\n\t\t\t" + fuelType + " PRICES NEARBY")
 print("---------------------------------------------------------------------")
 print("IDENT\tSELF\tFULL\tDIST\tDIRECT\tFBO")
 for fbo in fboTable:
