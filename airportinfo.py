@@ -4,6 +4,7 @@ airportinfo.py
 Displays relevant information about an airport: radio frequencies, runways, etc.
 
 TODO: customize radius of nearby airports
+TODO: find magnetic deviation
 
 '''
 
@@ -66,13 +67,15 @@ if apName == None:
 print("")
 print(apName + " (" + code + ")")
 if apLat >= 0:
-    latText = str(round(abs(apLat),6)) + "°N"
+    latDir = "°N"
 else:
-    latText = str(round(abs(apLat),6)) + "°S"
+    latDir = "°S"
 if apLong >= 0:
-    longText = str(round(abs(apLong),6)) + "°E"
+    longDir = "°E"
 else:
-    longText = str(round(abs(apLong),6)) + "°W"
+    longDir = "°W"
+latText = str(round(abs(apLat),6)) + latDir
+longText = str(round(abs(apLong),6)) + longDir
 print(latText + ", " + longText + ", elev. " + apElev + " ft ASL")
 print("------------------------------------------------------")
 
