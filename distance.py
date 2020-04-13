@@ -1,9 +1,7 @@
 '''
 distance.py
 
-Calculates the direct distance between two airports.
-
-TODO: support navaids as well
+Calculates the direct distance between two airport/navaids.
 
 '''
 
@@ -13,6 +11,20 @@ import sys
 from math import sin, cos, sqrt, atan2, radians
 
 DATA_DIR = "./data/"
+
+# distance between two global points in nautical miles
+def dist_coord(lat1,lon1,lat2,lon2): 
+    # source: https://stackoverflow.com/questions/19412462/getting-distance-between-two-points-based-on-latitude-longitude  
+    R = 6373.0 # approximate radius of earth in km
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    return 0.539957*R * c
 
 if len(sys.argv) > 2:
     src = sys.argv[1].upper()
@@ -66,20 +78,6 @@ if srcLat == None or dstLat == None:
     if dstLat == None:
         print("Can't find " + dst + "!")
     sys.exit()
-
-# distance between two global points in nautical miles
-def dist_coord(lat1,lon1,lat2,lon2): 
-    # source: https://stackoverflow.com/questions/19412462/getting-distance-between-two-points-based-on-latitude-longitude  
-    R = 6373.0 # approximate radius of earth in km
-    lat1 = radians(lat1)
-    lon1 = radians(lon1)
-    lat2 = radians(lat2)
-    lon2 = radians(lon2)
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return 0.539957*R * c
 
 dist = dist_coord(srcLat,srcLong,dstLat,dstLong)
 
