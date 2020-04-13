@@ -1,7 +1,9 @@
 '''
-diagramscraper.py
+distance.py
 
-Scrapes airnav.com for all relevant FAA diagrams for a particular airport.
+Calculates the direct distance between two airports.
+
+TODO: support navaids as well
 
 '''
 
