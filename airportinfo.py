@@ -98,10 +98,10 @@ with open(DATA_DIR+'/cities/uscities.csv', newline='') as csvfile:
 def minPopulation(e):
     return float(e['population'])
 
-# sort by closest distance if a small airport, 
-# and by population if it's medium/large
+# choose city at shortest distance if a small airport or heliport, 
+# or with largest population if it's medium/large
 if len(cityList) > 0:
-    if apType.find("small") != -1:
+    if apType.find("small") != -1 or apType.find("heli") != -1:
         cityList.sort(key=minDist)
         city = cityList[0]
     else:
