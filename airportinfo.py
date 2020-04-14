@@ -8,6 +8,7 @@ TODO: find magnetic deviation
 TODO: if you can't find the airport code, try putting a 'K' in front of it
 TODO: if you can't find the airport code and it's 4-letters long, try removing the first letter
 TODO: maybe make this into a general info utility that also works on navaids
+TODO: handle hybrid runway materials (or maybe just get entire list of possibilites and classify)
 
 '''
 
@@ -92,12 +93,54 @@ with open(DATA_DIR+'runways.csv', newline='') as csvfile:
             runway['length'] = int(runway['length_ft'])
             runwayList.append(runway)
 
+# returns material of the runway
+def runwayMaterial(rwy):
+    # no common vocab for this so we have to be a bit flexible
+    surf = rwy['surface'].upper()
+    if surf.find("CON") != -1:
+        return "concrete"
+    elif surf.find("ASP") != -1:
+        return "asphalt"
+    elif surf.find("TUR") != -1:
+        return "astroturf"
+    elif surf.find("DIRT") != -1:
+        return "dirt"
+    elif surf.find("GRV") != -1 or surf.find("GRAV") != -1:
+        return "gravel"
+    elif surf.find("SAND") != -1:
+        return "sand"
+    elif surf.find("WAT") != -1:
+        return "water"
+    elif surf.find("MAT") != -1:
+        return "mat"
+    elif surf.find("GRASS") != -1:
+        return "grass"
+    else:
+        return ""
+
+
 runwayList.sort(key=minLength)
 for runway in runwayList:
-    if runway['le_ident'][0:1] == "H":
-        print("Helipad " + runway['le_ident'] + " -- " + runway['length_ft'] + " ft")
+    rmat = runwayMaterial(runway)
+    if len(rmat) > 0:
+        matStr = ", " + rmat
     else:
-        print("Runway " + runway['le_ident'] + " (" + runway['le_heading_degT'] + "°) / " + runway['he_ident'] + " (" + runway['he_heading_degT'] + "°) -- " + runway['length_ft'] + " ft")
+        matStr = ""
+
+    if len(runway['le_heading_degT']) > 0:
+        leHeadingStr = " (" + runway['le_heading_degT'] + "°)"
+    else:
+        leHeadingStr = ""
+    
+    if len(runway['he_heading_degT']) > 0:
+        heHeadingStr = " (" + runway['he_heading_degT'] + "°)"
+    else:
+        heHeadingStr = ""
+
+    if runway['le_ident'][0:1] == "H":
+        print("Helipad " + runway['le_ident'] + " -- " + runway['length_ft'] + " ft" + matStr)
+    else:
+        print("Runway " + runway['le_ident'] + leHeadingStr + " / " + runway['he_ident'] + heHeadingStr  + " -- " + runway['length_ft'] + " ft" + matStr)
 
 # com frequencies
 nearbyComFreqs=[]
