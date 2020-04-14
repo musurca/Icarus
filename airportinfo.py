@@ -61,6 +61,7 @@ with open(DATA_DIR+'airports.csv', newline='') as csvfile:
             apName = airport['name']
             apId = airport['id']
             apElev = airport['elevation_ft']
+            apType = airport['type']
             if airport['type'].find("heli") != -1:
                 showHelipads = True
             break
@@ -81,7 +82,34 @@ else:
 latText = str(round(abs(apLat),6)) + latDir
 longText = str(round(abs(apLong),6)) + longDir
 print(latText + ", " + longText + ", elev. " + apElev + " ft ASL")
-print("------------------------------------------------------")
+
+# find closest city within 20nm
+cityList = []
+with open(DATA_DIR+'/cities/uscities.csv', newline='') as csvfile:
+    cities = csv.DictReader(csvfile)
+    for city in cities:
+        cLat = float(city['lat'])
+        cLong = float(city['lng'])
+        cDist = dist_coord(apLat, apLong, cLat, cLong)
+        if cDist < 20:
+            city['dist'] = cDist
+            cityList.append(city)
+
+def minPopulation(e):
+    return float(e['population'])
+
+# sort by closest distance if a small airport, 
+# and by population if it's medium/large
+if len(cityList) > 0:
+    if apType.find("small") != -1:
+        cityList.sort(key=minDist)
+        city = cityList[0]
+    else:
+        cityList.sort(key=minPopulation)
+        city = cityList[len(cityList)-1]
+    print("Closest city: " + city['city_ascii'] + ", " + city['state_id'] + " (" + str(round(city['dist'],1)) + "nm)")
+
+print("------------------------------------------------------")      
 
 # runways
 runwayList = []
