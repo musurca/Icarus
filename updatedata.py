@@ -25,7 +25,7 @@ DATABASES = [ 'airports.csv',
 try:
     os.mkdir(DATA_DIR)
 except OSError as error:
-    for file in glob.glob(DATA_DIR + "*"):
+    for file in glob.glob(DATA_DIR + "*.csv"):
         os.remove(file)
 
 for db in DATABASES:
