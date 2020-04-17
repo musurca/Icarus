@@ -136,7 +136,16 @@ remarkDict = {  'opns':"operations",
                 "twy":"taxiway",
                 "freq":"frequency",
                 "freqs":"frequencies",
-                "una":"unable"
+                "una":"unable",
+                "agri":"agricultural",
+                "excp":"except",
+                "pwrd":"powered",
+                "svcs":"services",
+                "svc":"service",
+                "mil":"military",
+                "maint":"maintenance",
+                "btn":"between",
+                "lgtd":"lighted"
             }
 
 punctDict = ['/', '.', ';', ',', ' ', ':']
