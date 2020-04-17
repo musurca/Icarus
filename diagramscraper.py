@@ -43,6 +43,9 @@ for a in chart_soup.find_all('a'):
             else:
                 pdfLinks.append({'text':a.text, 'url':hrefStr})
 
+def replace_char(s, p, r):
+    return s[:p]+r+s[p+1:]
+
 if len(pdfLinks) == 0:
     print("No diagrams available for this airport.")
 else:
@@ -52,8 +55,14 @@ else:
 
     # Download them      
     for link in pdfLinks:
-        print("\n" + link['text'])
-        wget.download(link['url'], BASE_PATH + "/" + airportCode + "/" + link['text'] + ".PDF")
+        # replace folder separator character
+        fileName = link['text']
+        splatIndex = fileName.find("/")
+        while splatIndex != -1:
+            fileName = replace_char(fileName,splatIndex,'-')
+            splatIndex = fileName.find("/")
+        print("\n" + fileName)
+        wget.download(link['url'], BASE_PATH + "/" + airportCode + "/" + fileName + ".PDF")
 
 # save decoded airport remarks
 remarkDict = {  'opns':"operations",
@@ -120,10 +129,17 @@ remarkDict = {  'opns':"operations",
                 "invof":"in the vicinity of",
                 "mi":"mile",
                 "sta":"straight in approach",
-                "stas":"straight in approaches"
+                "stas":"straight in approaches",
+                "atct":"air traffic control tower",
+                "lcl":"localizer",
+                "trng":"training",
+                "twy":"taxiway",
+                "freq":"frequency",
+                "freqs":"frequencies",
+                "una":"unable"
             }
 
-punctDict = ['/', '.', ';', ',', ' ']
+punctDict = ['/', '.', ';', ',', ' ', ':']
 
 def customSplit(str):
     tokens=[]
