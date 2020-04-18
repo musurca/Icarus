@@ -14,7 +14,7 @@ TODO: handle hybrid runway materials (or maybe just get entire list of possibili
 import requests
 import csv
 import sys
-from math import sin, cos, sqrt, atan2, radians
+from math import sin, cos, sqrt, atan2, radians, degrees
 
 from bs4 import BeautifulSoup
 
@@ -34,6 +34,17 @@ def dist_coord(lat1,lon1,lat2,lon2):
     a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     return 0.539957*R * c
+
+def brg_coord(lat1,lon1,lat2,lon2):
+    # source: https://www.movable-type.co.uk/scripts/latlong.html
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+    deltaLon = lon2 - lon1
+    y = sin(deltaLon) * cos(lat2)
+    x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(deltaLon)
+    return degrees(atan2(y, x))
 
 def minDist(e):
     return e['dist']
@@ -199,6 +210,10 @@ with open(DATA_DIR+'navaids.csv', newline='') as csvfile:
         dist = dist_coord(apLat, apLong, navLat, navLong)
         if dist <= 30:
             navaid['dist'] = dist
+            brg = brg_coord(navLat, navLong, apLat, apLong)
+            if brg < 0:
+                brg = 360+brg
+            navaid['radial'] = str(round(brg,1))
             closenavaids.append(navaid)
 
 closenavaids.sort(key=minDist)
@@ -213,7 +228,7 @@ if len(closenavaids) > 0:
                 freq = " @ " + str(float(navaid['frequency_khz'])/1000) + " mHz"
         else:
             freq = ""
-        print(str(round(navaid['dist'],2)) + " nm:\t" + navaid['ident'] + " (" + navaid['name'] + " " + navaid['type'] + ")" + freq)
+        print(str(round(navaid['dist'],2)) + "nm/rad " + navaid['radial'] + "°:\t" + navaid['ident'] + " (" + navaid['name'] + " " + navaid['type'] + ")" + freq)
 
 nearbyAirports = []
 # find airports within 20nm

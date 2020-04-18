@@ -8,7 +8,7 @@ Calculates the direct distance between two airport/navaids.
 import csv
 import sys
 
-from math import sin, cos, sqrt, atan2, radians
+from math import sin, cos, sqrt, atan2, radians, degrees
 
 DATA_DIR = "./data/"
 
@@ -25,6 +25,17 @@ def dist_coord(lat1,lon1,lat2,lon2):
     a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     return 0.539957*R * c
+
+def brg_coord(lat1,lon1,lat2,lon2):
+    # source: https://www.movable-type.co.uk/scripts/latlong.html
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+    deltaLon = lon2 - lon1
+    y = sin(deltaLon) * cos(lat2)
+    x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(deltaLon)
+    return degrees(atan2(y, x))
 
 if len(sys.argv) > 2:
     src = sys.argv[1].upper()
@@ -109,6 +120,9 @@ dstLong = float(refDest['longitude_deg'])
 dstName = refDest['name']
 
 dist = dist_coord(srcLat,srcLong,dstLat,dstLong)
+brg = brg_coord(srcLat, srcLong, dstLat, dstLong)
+if brg < 0:
+    brg = 360+brg
 
 print(src + " (" + srcName + ") --> " + dst + " (" + dstName + ")")
-print(str(round(dist,2)) + " nm")
+print(str(round(dist,1)) + " nm @ " + str(round(brg,1))+"°")
