@@ -131,7 +131,7 @@ remarkDict = {  'opns':"operations",
                 "sta":"straight in approach",
                 "stas":"straight in approaches",
                 "atct":"air traffic control tower",
-                "lcl":"local time",
+                "lcl":"local",
                 "trng":"training",
                 "twy":"taxiway",
                 "twys":"taxiways",
@@ -175,7 +175,9 @@ remarkDict = {  'opns':"operations",
                 "offl":"official",
                 "bus":"business",
                 "btwn":"between",
-                "thld":"thrust hold"
+                "thld":"thrust hold",
+                "sgl":"single",
+                "eng":"engine"
             }
 
 punctDict = ['/', '.', ';', ',', ' ', ':']
