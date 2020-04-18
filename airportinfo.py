@@ -11,13 +11,15 @@ TODO: maybe make this into a general info utility that also works on navaids
 TODO: handle hybrid runway materials (or maybe just get entire list of possibilites and classify)
 
 '''
-
+import requests
 import csv
 import sys
-
 from math import sin, cos, sqrt, atan2, radians
 
+from bs4 import BeautifulSoup
+
 DATA_DIR = "./data/"
+CHART_SOURCE = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
 
 # distance between two global points in nautical miles
 def dist_coord(lat1,lon1,lat2,lon2): 
@@ -155,6 +157,9 @@ for runway in runwayList:
     else:
         matStr = ""
 
+    if runway['lighted'] == '1':
+        matStr = matStr + " (L)"
+
     if len(runway['le_heading_degT']) > 0:
         leHeadingStr = " (" + runway['le_heading_degT'] + "°)"
     else:
@@ -230,4 +235,159 @@ if len(nearbyAirports) > 0:
         codeString = codeString + ", " + nearbyAirports[k+1]['ident']
     print("\nWithin 20nm: " + codeString)
 
+# find & decode updated remarks
+s = requests.Session() 
+chart_soup = BeautifulSoup(s.get(CHART_SOURCE + code).text, features="html.parser")
+remarkDict = {  'opns':"operations",
+                'dsgnd':"designated",
+                'heli':"helipad",
+                'extdd':"extended",
+                'dep':"departure",
+                'deps':"departures",
+                'apch':"approach",
+                'apchs':"approaches",
+                'rsrtd':"restricted",
+                'auth':"authorized",
+                'mntn':"maintain",
+                'ry':"runway",
+                "rwy":"runway",
+                'ne':"northeast",
+                'sw':"southwest",
+                "se":"southeast",
+                "nw":"northwest",
+                "n":"north",
+                "s":"south",
+                "e":"east",
+                "w":"west",
+                "prmary":"primary",
+                "ohd":"overhead",
+                "fm":"from",
+                "byd":"beyond",
+                "rcmdd":"recommended",
+                "pat":"pattern", 
+                "deg":"degree",
+                "oper":"operating",
+                "arpt":"airport",
+                "hel":"helicopters",
+                "mt":"mountain",
+                "ovr":"over",
+                "ctc":"contact",
+                "lctd":"located",
+                "artcc":"air route traffic control center",
+                "atcc":"air traffic control center",
+                "tsnt":"transient",
+                "clsd":"closed",
+                "pvt":"private",
+                "sfc":"surface",
+                "acft":"aircraft",
+                "psnl":"personnel",
+                "efct":"effect",
+                "lmtd":"limited",
+                "trml":"terminal",
+                "non-sked":"non-scheduled",
+                "sked":"scheduled",
+                "trnsp":"transport",
+                "rqrd":"required",
+                "arr":"arrival",
+                "intl":"international",
+                "emerg":"emergency",
+                "fac":"facility",
+                "facs":"facilities",
+                "avbl":"available",
+                "proc":"procedure",
+                "procs":"procedures",
+                "hrs":"hours",
+                "coml":"commercial",
+                "tfc":"traffic",
+                "invof":"in the vicinity of",
+                "mi":"mile",
+                "sta":"straight in approach",
+                "stas":"straight in approaches",
+                "atct":"air traffic control tower",
+                "lcl":"local time",
+                "trng":"training",
+                "twy":"taxiway",
+                "twys":"taxiways",
+                "freq":"frequency",
+                "freqs":"frequencies",
+                "una":"unable",
+                "agri":"agricultural",
+                "excp":"except",
+                "pwrd":"powered",
+                "svcs":"services",
+                "svc":"service",
+                "mil":"military",
+                "maint":"maintenance",
+                "btn":"between",
+                "lgtd":"lighted",
+                "vcnty":"vicinity",
+                "nmrs":"numerous",
+                "turb":"turbulence",
+                "rstd":"restricted",
+                "flt":"flight",
+                "ops":"operations",
+                "gtr":"greater",
+                "opn":"operation",
+                "lgts":"lights",
+                "authd":"authorized",
+                "pwr":"power",
+                "prkg":"parking",
+                "trmls":"terminals",
+                "intrpd":"interrupted",
+                "mnm":"minimum",
+                "psn":"position",
+                "txg":"taxiing",
+                "haz":"hazard",
+                "inbd":"inbound",
+                "obnd":"outbound",
+                "sbnd":"southbound",
+                "wbnd":"westbound",
+                "nbnd":"northbound",
+                "ebnd":"eastbound",
+                "len":"length",
+                "offl":"official",
+                "bus":"business",
+                "btwn":"between",
+                "thld":"thrust hold"
+            }
+
+punctDict = ['/', '.', ';', ',', ' ', ':','(',')']
+
+def customSplit(str):
+    tokens=[]
+    cur=0
+    for k in range(len(str)):
+        if str[k] in punctDict:
+            if k == cur:
+                word = ""
+            else:
+                word = str[cur:k]
+            tokens.append({'word':word,'punct':str[k]})
+            cur=k+1
+    if cur < len(str):
+        tokens.append({'word':str[cur:],'punct':""})
+    return tokens
+
+def decode_remark(rtext):
+    finalTxt = ""
+    tokens = customSplit(rtext.lower())
+    for token in tokens:
+        if token['word'] in remarkDict.keys():
+            word = remarkDict[token['word']]
+        else:
+            word = token['word']
+        finalTxt = finalTxt + word + token['punct']
+    return finalTxt
+
+remarks = []
+for div in chart_soup.find_all('div'):
+    if div.has_attr('id'):
+        if div['id'].find("remarks") != -1:
+            for remark in div.find_all('li'):
+                remarks.append(decode_remark(remark.text).upper())
+
+if len(remarks) > 0:
+    print("")
+    for remark in remarks:
+        print("- " + remark)
 print("")
