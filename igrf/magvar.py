@@ -23,10 +23,9 @@ class Magvar:
         igrf = self.igrf
         lat, lon = iut.check_lat_lon_bounds(latd,0,lond,0)
         colat = 90-lat
-        itype = 1 #geodetic model
+        itype = 1 # use geodetic model
         altkm = 0.0003048*altft
         year = date.today().year
-        # todo: retrieve current date from local computer
         alt, colat, sd, cd = iut.gg_to_geo(altkm, colat)
 
         # Interpolate the geomagnetic coefficients to the desired date(s)
