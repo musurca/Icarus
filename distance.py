@@ -7,10 +7,13 @@ Calculates the direct distance between two airport/navaids.
 
 import csv
 import sys
-
 from math import sin, cos, sqrt, atan2, radians, degrees
 
+from igrf.magvar import Magvar
+
 DATA_DIR = "./data/"
+
+MV = Magvar()
 
 # distance between two global points in nautical miles
 def dist_coord(lat1,lon1,lat2,lon2): 
@@ -26,6 +29,13 @@ def dist_coord(lat1,lon1,lat2,lon2):
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     return 0.539957*R * c
 
+def wrap_brg(b):
+    if b < 0:
+        b = 360+b
+    elif b >= 360:
+        b = 360-b
+    return b
+
 def brg_coord(lat1,lon1,lat2,lon2):
     # source: https://www.movable-type.co.uk/scripts/latlong.html
     lat1 = radians(lat1)
@@ -35,7 +45,7 @@ def brg_coord(lat1,lon1,lat2,lon2):
     deltaLon = lon2 - lon1
     y = sin(deltaLon) * cos(lat2)
     x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(deltaLon)
-    return degrees(atan2(y, x))
+    return wrap_brg(degrees(atan2(y, x)))
 
 if len(sys.argv) > 2:
     src = sys.argv[1].upper()
@@ -120,9 +130,7 @@ dstLong = float(refDest['longitude_deg'])
 dstName = refDest['name']
 
 dist = dist_coord(srcLat,srcLong,dstLat,dstLong)
-brg = brg_coord(srcLat, srcLong, dstLat, dstLong)
-if brg < 0:
-    brg = 360+brg
+brg = wrap_brg(brg_coord(srcLat, srcLong, dstLat, dstLong) - MV.declination((dstLat+srcLat)/2,(dstLong+srcLong)/2,0))
 
 print(src + " (" + srcName + ") --> " + dst + " (" + dstName + ")")
-print(str(round(dist,1)) + " nm @ " + str(round(brg,1))+"°")
+print(str(round(dist,1)) + " nm @ " + str(int(round(brg)))+"°")

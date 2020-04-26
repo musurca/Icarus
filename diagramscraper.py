@@ -177,7 +177,8 @@ remarkDict = {  'opns':"operations",
                 "btwn":"between",
                 "thld":"thrust hold",
                 "sgl":"single",
-                "eng":"engine"
+                "eng":"engine",
+                "grvl":"gravel"
             }
 
 punctDict = ['/', '.', ';', ',', ' ', ':']

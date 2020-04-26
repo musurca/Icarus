@@ -4,7 +4,6 @@ airportinfo.py
 Displays relevant information about an airport: radio frequencies, runways, etc.
 
 TODO: customize radius of nearby airports
-TODO: find magnetic deviation
 TODO: if you can't find the airport code, try putting a 'K' in front of it
 TODO: if you can't find the airport code and it's 4-letters long, try removing the first letter
 TODO: maybe make this into a general info utility that also works on navaids
@@ -18,8 +17,12 @@ from math import sin, cos, sqrt, atan2, radians, degrees
 
 from bs4 import BeautifulSoup
 
+from igrf.magvar import Magvar
+
 DATA_DIR = "./data/"
 CHART_SOURCE = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
+
+MV = Magvar()
 
 # distance between two global points in nautical miles
 def dist_coord(lat1,lon1,lat2,lon2): 
@@ -35,6 +38,13 @@ def dist_coord(lat1,lon1,lat2,lon2):
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     return 0.539957*R * c
 
+def wrap_brg(b):
+    if b < 0:
+        b = 360+b
+    elif b >= 360:
+        b = 360-b
+    return b
+
 def brg_coord(lat1,lon1,lat2,lon2):
     # source: https://www.movable-type.co.uk/scripts/latlong.html
     lat1 = radians(lat1)
@@ -44,7 +54,7 @@ def brg_coord(lat1,lon1,lat2,lon2):
     deltaLon = lon2 - lon1
     y = sin(deltaLon) * cos(lat2)
     x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(deltaLon)
-    return degrees(atan2(y, x))
+    return wrap_brg(degrees(atan2(y, x)))
 
 def minDist(e):
     return e['dist']
@@ -172,12 +182,12 @@ for runway in runwayList:
         matStr = matStr + " (L)"
 
     if len(runway['le_heading_degT']) > 0:
-        leHeadingStr = " (" + runway['le_heading_degT'] + "°)"
+        leHeadingStr = " (" + str(int(round(float(runway['le_heading_degT'])))) + "°)"
     else:
         leHeadingStr = ""
     
     if len(runway['he_heading_degT']) > 0:
-        heHeadingStr = " (" + runway['he_heading_degT'] + "°)"
+        heHeadingStr = " (" + str(int(round(float(runway['he_heading_degT'])))) + "°)"
     else:
         heHeadingStr = ""
 
@@ -210,10 +220,9 @@ with open(DATA_DIR+'navaids.csv', newline='') as csvfile:
         dist = dist_coord(apLat, apLong, navLat, navLong)
         if dist <= 30:
             navaid['dist'] = dist
-            brg = brg_coord(navLat, navLong, apLat, apLong)
-            if brg < 0:
-                brg = 360+brg
-            navaid['radial'] = str(round(brg,1))
+            navMagVar = MV.declination(navLat, navLong,0)
+            brg = wrap_brg(brg_coord(navLat, navLong, apLat, apLong) - navMagVar)
+            navaid['radial'] = str(int(round(brg)))
             closenavaids.append(navaid)
 
 closenavaids.sort(key=minDist)
@@ -228,7 +237,7 @@ if len(closenavaids) > 0:
                 freq = " @ " + str(float(navaid['frequency_khz'])/1000) + " mHz"
         else:
             freq = ""
-        print(str(round(navaid['dist'],2)) + "nm/rad " + navaid['radial'] + "°:\t" + navaid['ident'] + " (" + navaid['name'] + " " + navaid['type'] + ")" + freq)
+        print(str(round(navaid['dist'],1)) + " nm/rad " + navaid['radial'] + "°:\t" + navaid['ident'] + " (" + navaid['name'] + " " + navaid['type'] + ")" + freq)
 
 nearbyAirports = []
 # find airports within 20nm
@@ -365,7 +374,8 @@ remarkDict = {  'opns':"operations",
                 "btwn":"between",
                 "thld":"thrust hold",
                 "sgl":"single",
-                "eng":"engine"
+                "eng":"engine",
+                "grvl":"gravel"
             }
 
 punctDict = ['/', '.', ';', ',', ' ', ':','(',')']
