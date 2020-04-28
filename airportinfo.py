@@ -36,7 +36,7 @@ if len(sys.argv) > 2:
 
 # QUERY - find airport by provided ICAO code
 def airportMatchesICAO(airport):
-    return airport['ident'] == code
+    return airport['ident'] == code or airport['keywords'].find(code) != -1
 
 airport = db.findFirst('airports.csv', airportMatchesICAO)
 
@@ -51,6 +51,8 @@ if airport != None:
         showHelipads = True
 else:
     sys.exit("Can't find airport " + code + "!")
+
+code = airport['ident']
 
 print("")
 print(apName + " (" + code + ")")

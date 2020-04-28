@@ -165,7 +165,27 @@ remarkDict = {  'opns':"operations",
                 "avn":"aviation",
                 "procd":"proceed",
                 "mkd":"marked",
-                "auzd":"authorized"
+                "auzd":"authorized",
+                "indus":"industrial",
+                "instln":"installation",
+                "trnspn":"transportation",
+                "unlgt":"unlighted",
+                "lgt":"lighted",
+                "obstn":"obstruction",
+                "afld":"airfield",
+                "ldg":"landing",
+                "dpt":"departing",
+                "vsb":"visible",
+                "fpl":"flight plan",
+                "prk":"parking",
+                "unauthd":"unauthorized",
+                "mrk":"marking",
+                "unavbl":"unavailable",
+                "rqr":"requires",
+                "gnd":"ground",
+                "grd":"ground",
+                "unlgtd":"unlighted",
+                "daylt":"daylight"
             }
 
 punctDict = ['/', '.', ';', ',', ' ', ':','(',')']
