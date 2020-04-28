@@ -9,7 +9,7 @@ import sys
 
 from igrf.magvar import Magvar
 
-from utils import executeCSV, dist_coord, brg_coord, wrap_brg
+from utils import db, globenav
 
 MV = Magvar()
 
@@ -39,8 +39,8 @@ def matchICAOCodes(element):
     elif ident == dst:
         possibleDests.append(element)
 
-executeCSV('airports.csv', matchICAOCodes)
-executeCSV('navaids.csv', matchICAOCodes)
+db.execute('airports.csv', matchICAOCodes)
+db.execute('navaids.csv', matchICAOCodes)
 
 if len(possibleSources) == 0 or len(possibleDests) == 0:
     if len(possibleSources) == 0:
@@ -87,10 +87,10 @@ dstLat = float(refDest['latitude_deg'])
 dstLong = float(refDest['longitude_deg'])
 dstName = refDest['name']
 
-dist = dist_coord(srcLat,srcLong,dstLat,dstLong)
+dist = globenav.dist_coord(srcLat,srcLong,dstLat,dstLong)
 
 # account for magnetic declination at midpoint between navigation points
-brg = wrap_brg(brg_coord(srcLat, srcLong, dstLat, dstLong) - MV.declination((dstLat+srcLat)/2,(dstLong+srcLong)/2,0))
+brg = globenav.wrap_brg(globenav.brg_coord(srcLat, srcLong, dstLat, dstLong) - MV.declination((dstLat+srcLat)/2,(dstLong+srcLong)/2,0))
 
 print(src + " (" + srcName + ") --> " + dst + " (" + dstName + ")")
 print(str(round(dist,1)) + " nm @ " + str(int(round(brg)))+"°")

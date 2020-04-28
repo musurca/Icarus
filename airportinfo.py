@@ -18,7 +18,7 @@ from bs4 import BeautifulSoup
 
 from igrf.magvar import Magvar
 
-from utils import queryCSV, findFirstCSV, runwayMaterial, decode_remark, dist_coord, brg_coord, wrap_brg
+from utils import db, runwayMaterial, decode_remark, globenav
 
 CHART_SOURCE = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
 
@@ -34,12 +34,11 @@ if len(sys.argv) > 2:
     if sys.argv[2] == "heli":
         showHelipads = True
 
-apName = None
 # QUERY - find airport by provided ICAO code
 def airportMatchesICAO(airport):
     return airport['ident'] == code
 
-airport = findFirstCSV('airports.csv', airportMatchesICAO)
+airport = db.findFirst('airports.csv', airportMatchesICAO)
 
 if airport != None:
     apLat = float(airport['latitude_deg'])
@@ -71,13 +70,13 @@ print(latText + ", " + longText + ", elev. " + apElev + " ft ASL")
 def isCityWithin20NM(city):
     cLat = float(city['lat'])
     cLong = float(city['lng'])
-    cDist = dist_coord(apLat, apLong, cLat, cLong)
+    cDist = globenav.dist_coord(apLat, apLong, cLat, cLong)
     return (cDist < 20, cDist)
 
 def cityProcess(city, args):
     city['dist'] = args[0]
 
-cityList = queryCSV('/cities/uscities.csv', isCityWithin20NM, cityProcess)
+cityList = db.query('/cities/uscities.csv', isCityWithin20NM, cityProcess)
 
 def minDist(e):
     return e['dist']
@@ -109,7 +108,7 @@ def openAndMatchesICAO(runway):
 def runwayProcess(runway, args):
     runway['length'] = int(runway['length_ft'])
 
-runwayList = queryCSV('runways.csv', openAndMatchesICAO, runwayProcess)
+runwayList = db.query('runways.csv', openAndMatchesICAO, runwayProcess)
 runwayList.sort(key=minLength)
 
 for runway in runwayList:
@@ -141,7 +140,7 @@ for runway in runwayList:
 def matchesICAOCode(freq):
     return freq['airport_ident'] == code,
 
-nearbyComFreqs = queryCSV('airport-frequencies.csv', matchesICAOCode)
+nearbyComFreqs = db.query('airport-frequencies.csv', matchesICAOCode)
 
 if len(nearbyComFreqs) > 0:
     print("")
@@ -154,7 +153,7 @@ if len(nearbyComFreqs) > 0:
 def isWithinRange(navaid):
     navLat = float(navaid['latitude_deg'])
     navLong = float(navaid['longitude_deg'])
-    dist = dist_coord(apLat, apLong, navLat, navLong)
+    dist = globenav.dist_coord(apLat, apLong, navLat, navLong)
     return (dist<=30, dist, navLat, navLong)
 
 # save distance and radial to airport
@@ -162,10 +161,10 @@ def navaidPostprocess(navaid, args):
     dist, navLat, navLong = args
     navaid['dist'] = dist
     navMagVar = MV.declination(navLat, navLong,0)
-    brg = wrap_brg(brg_coord(navLat, navLong, apLat, apLong) - navMagVar)
+    brg = globenav.wrap_brg(globenav.brg_coord(navLat, navLong, apLat, apLong) - navMagVar)
     navaid['radial'] = str(int(round(brg)))
 
-closenavaids = queryCSV('navaids.csv', isWithinRange, navaidPostprocess)
+closenavaids = db.query('navaids.csv', isWithinRange, navaidPostprocess)
 closenavaids.sort(key=minDist)
 
 if len(closenavaids) > 0:
@@ -186,13 +185,13 @@ def airportFilter(airport):
     ident = airport['ident']
     aLat = float(airport['latitude_deg'])
     aLong = float(airport['longitude_deg'])
-    dist = dist_coord(apLat, apLong, aLat, aLong)
+    dist = globenav.dist_coord(apLat, apLong, aLat, aLong)
     return (ident != code and dist <= 20 and (showHelipads or airport['type'].find("airport") != -1), dist)
 
 def airportProcess(airport, args):
     airport['dist'] = args[0]
 
-nearbyAirports = queryCSV('airports.csv', airportFilter, airportProcess)
+nearbyAirports = db.query('airports.csv', airportFilter, airportProcess)
 nearbyAirports.sort(key=minDist)
 
 if len(nearbyAirports) > 0:

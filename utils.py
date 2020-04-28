@@ -185,68 +185,68 @@ def runwayMaterial(txt):
         return ""
 
 # SPHERICAL NAVIGATION
+class globenav:
+    # wrap a bearing in degrees to the range 0-359
+    def wrap_brg(b):
+        if b < 0:
+            b = 360+b
+        elif b >= 360:
+            b = 360-b
+        return b
 
-# wrap a bearing in degrees to the range 0-359
-def wrap_brg(b):
-    if b < 0:
-        b = 360+b
-    elif b >= 360:
-        b = 360-b
-    return b
+    # true bearing from one global point to another
+    def brg_coord(lat1,lon1,lat2,lon2):
+        # source: https://www.movable-type.co.uk/scripts/latlong.html
+        lat1 = radians(lat1)
+        lon1 = radians(lon1)
+        lat2 = radians(lat2)
+        lon2 = radians(lon2)
+        deltaLon = lon2 - lon1
+        y = sin(deltaLon) * cos(lat2)
+        x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(deltaLon)
+        return globenav.wrap_brg(degrees(atan2(y, x)))
 
-# true bearing from one global point to another
-def brg_coord(lat1,lon1,lat2,lon2):
-    # source: https://www.movable-type.co.uk/scripts/latlong.html
-    lat1 = radians(lat1)
-    lon1 = radians(lon1)
-    lat2 = radians(lat2)
-    lon2 = radians(lon2)
-    deltaLon = lon2 - lon1
-    y = sin(deltaLon) * cos(lat2)
-    x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(deltaLon)
-    return wrap_brg(degrees(atan2(y, x)))
-
-# distance between two global points in nautical miles
-def dist_coord(lat1,lon1,lat2,lon2): 
-    # source: https://stackoverflow.com/questions/19412462/getting-distance-between-two-points-based-on-latitude-longitude  
-    R = 6373.0 # approximate radius of earth in km
-    lat1 = radians(lat1)
-    lon1 = radians(lon1)
-    lat2 = radians(lat2)
-    lon2 = radians(lon2)
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return 0.539957*R * c
+    # distance between two global points in nautical miles
+    def dist_coord(lat1,lon1,lat2,lon2): 
+        # source: https://stackoverflow.com/questions/19412462/getting-distance-between-two-points-based-on-latitude-longitude  
+        R = 6373.0 # approximate radius of earth in km
+        lat1 = radians(lat1)
+        lon1 = radians(lon1)
+        lat2 = radians(lat2)
+        lon2 = radians(lon2)
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return 0.539957*R * c
 
 # CSV DATABASE QUERIES
+class db:
+    # execute a function on each element of a CSV
+    def execute(csvFile, executeFunc):
+        with open(DATA_DIR+csvFile, newline='') as csvfile:
+            elements = csv.DictReader(csvfile)
+            for element in elements:
+                executeFunc(element)
 
-# execute a function on each element of a CSV
-def executeCSV(csvFile, executeFunc):
-    with open(DATA_DIR+csvFile, newline='') as csvfile:
-        elements = csv.DictReader(csvfile)
-        for element in elements:
-            executeFunc(element)
+    # return results filtered by a query function, and optionally post-process results
+    def query(csvFile, queryFunc, processFunc=None):
+        results = []
+        with open(DATA_DIR+csvFile, newline='') as csvfile:
+            elements = csv.DictReader(csvfile)
+            for element in elements:
+                res = queryFunc(element)
+                if res[0]:
+                    if processFunc != None:
+                        processFunc(element, res[1:])
+                    results.append(element)
+        return results
 
-# return results filtered by a query function, and optionally post-process results
-def queryCSV(csvFile, queryFunc, processFunc=None):
-    results = []
-    with open(DATA_DIR+csvFile, newline='') as csvfile:
-        elements = csv.DictReader(csvfile)
-        for element in elements:
-            res = queryFunc(element)
-            if res[0]:
-                if processFunc != None:
-                    processFunc(element, res[1:])
-                results.append(element)
-    return results
-
-# return first element matching query function
-def findFirstCSV(csvFile, queryFunc):
-    with open(DATA_DIR+csvFile, newline='') as csvfile:
-        elements = csv.DictReader(csvfile)
-        for element in elements:
-            if queryFunc(element):
-                return element
-    return None
+    # return first element matching query function
+    def findFirst(csvFile, queryFunc):
+        with open(DATA_DIR+csvFile, newline='') as csvfile:
+            elements = csv.DictReader(csvfile)
+            for element in elements:
+                if queryFunc(element):
+                    return element
+        return None
