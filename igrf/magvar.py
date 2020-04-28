@@ -70,5 +70,8 @@ class Magvar:
         dec, hoz, inc, eff = iut.xyz2dhif(X,Y,Z)
         # The IGRF SV coefficients are relative to the main field components 
         # at the start of each five year epoch e.g. 2010, 2015, 2020
+        # (but not needed in this case)
+        '''
         decs, hozs, incs, effs = iut.xyz2dhif_sv(Xm, Ym, Zm, dX, dY, dZ)
-        return decs
+        '''
+        return dec
