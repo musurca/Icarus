@@ -32,15 +32,22 @@ else:
 possibleSources=[]
 possibleDests=[]
 
-def matchICAOCodes(element):
+def matchICAOCodesAirports(element):
+    ident = element['ident']
+    if ident == src or element['keywords'].find(src) != -1:
+        possibleSources.append(element)
+    elif ident == dst or element['keywords'].find(dst) != -1:
+        possibleDests.append(element)
+
+def matchICAOCodesNavaids(element):
     ident = element['ident']
     if ident == src:
         possibleSources.append(element)
     elif ident == dst:
         possibleDests.append(element)
 
-db.execute('airports.csv', matchICAOCodes)
-db.execute('navaids.csv', matchICAOCodes)
+db.execute('airports.csv', matchICAOCodesAirports)
+db.execute('navaids.csv', matchICAOCodesNavaids)
 
 if len(possibleSources) == 0 or len(possibleDests) == 0:
     if len(possibleSources) == 0:
@@ -86,6 +93,9 @@ srcName = refSource['name']
 dstLat = float(refDest['latitude_deg'])
 dstLong = float(refDest['longitude_deg'])
 dstName = refDest['name']
+
+src = refSource['ident']
+dst = refDest['ident']
 
 dist = globenav.dist_coord(srcLat,srcLong,dstLat,dstLong)
 
