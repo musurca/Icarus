@@ -11,7 +11,6 @@ TODO: handle hybrid runway materials (or maybe just get entire list of possibili
 
 '''
 import requests
-import csv
 import sys
 from math import sin, cos, sqrt, atan2, radians, degrees
 
@@ -19,48 +18,11 @@ from bs4 import BeautifulSoup
 
 from igrf.magvar import Magvar
 
-DATA_DIR = "./data/"
+from utils import queryCSV, findFirstCSV, runwayMaterial, decode_remark, dist_coord, brg_coord, wrap_brg
+
 CHART_SOURCE = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
 
 MV = Magvar()
-
-# distance between two global points in nautical miles
-def dist_coord(lat1,lon1,lat2,lon2): 
-    # source: https://stackoverflow.com/questions/19412462/getting-distance-between-two-points-based-on-latitude-longitude  
-    R = 6373.0 # approximate radius of earth in km
-    lat1 = radians(lat1)
-    lon1 = radians(lon1)
-    lat2 = radians(lat2)
-    lon2 = radians(lon2)
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return 0.539957*R * c
-
-def wrap_brg(b):
-    if b < 0:
-        b = 360+b
-    elif b >= 360:
-        b = 360-b
-    return b
-
-def brg_coord(lat1,lon1,lat2,lon2):
-    # source: https://www.movable-type.co.uk/scripts/latlong.html
-    lat1 = radians(lat1)
-    lon1 = radians(lon1)
-    lat2 = radians(lat2)
-    lon2 = radians(lon2)
-    deltaLon = lon2 - lon1
-    y = sin(deltaLon) * cos(lat2)
-    x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(deltaLon)
-    return wrap_brg(degrees(atan2(y, x)))
-
-def minDist(e):
-    return e['dist']
-
-def minLength(e):
-    return e['length']
 
 if len(sys.argv) > 1:
     code = sys.argv[1].upper()
@@ -73,23 +35,22 @@ if len(sys.argv) > 2:
         showHelipads = True
 
 apName = None
-# find airport info
-with open(DATA_DIR+'airports.csv', newline='') as csvfile:
-    airports = csv.DictReader(csvfile)
-    for airport in airports:
-        ident = airport['ident']
-        if ident == code:
-            apLat = float(airport['latitude_deg'])
-            apLong = float(airport['longitude_deg'])
-            apName = airport['name']
-            apId = airport['id']
-            apElev = airport['elevation_ft']
-            apType = airport['type']
-            if airport['type'].find("heli") != -1:
-                showHelipads = True
-            break
+# QUERY - find airport by provided ICAO code
+def airportMatchesICAO(airport):
+    return airport['ident'] == code
 
-if apName == None:
+airport = findFirstCSV('airports.csv', airportMatchesICAO)
+
+if airport != None:
+    apLat = float(airport['latitude_deg'])
+    apLong = float(airport['longitude_deg'])
+    apName = airport['name']
+    apId = airport['id']
+    apElev = airport['elevation_ft']
+    apType = airport['type']
+    if airport['type'].find("heli") != -1:
+        showHelipads = True
+else:
     sys.exit("Can't find airport " + code + "!")
 
 print("")
@@ -106,17 +67,20 @@ latText = str(round(abs(apLat),6)) + latDir
 longText = str(round(abs(apLong),6)) + longDir
 print(latText + ", " + longText + ", elev. " + apElev + " ft ASL")
 
-# find closest city within 20nm
-cityList = []
-with open(DATA_DIR+'/cities/uscities.csv', newline='') as csvfile:
-    cities = csv.DictReader(csvfile)
-    for city in cities:
-        cLat = float(city['lat'])
-        cLong = float(city['lng'])
-        cDist = dist_coord(apLat, apLong, cLat, cLong)
-        if cDist < 20:
-            city['dist'] = cDist
-            cityList.append(city)
+# QUERY - find closest city within 20nm
+def isCityWithin20NM(city):
+    cLat = float(city['lat'])
+    cLong = float(city['lng'])
+    cDist = dist_coord(apLat, apLong, cLat, cLong)
+    return (cDist < 20, cDist)
+
+def cityProcess(city, args):
+    city['dist'] = args[0]
+
+cityList = queryCSV('/cities/uscities.csv', isCityWithin20NM, cityProcess)
+
+def minDist(e):
+    return e['dist']
 
 def minPopulation(e):
     return float(e['population'])
@@ -134,45 +98,22 @@ if len(cityList) > 0:
 
 print("------------------------------------------------------")      
 
-# runways
-runwayList = []
-with open(DATA_DIR+'runways.csv', newline='') as csvfile:
-    runways = csv.DictReader(csvfile)
-    for runway in runways:
-        refId = runway['airport_ident']
-        if refId == code and runway['closed'] == "0":
-            runway['length'] = int(runway['length_ft'])
-            runwayList.append(runway)
+# QUERY - airport runways
+def minLength(e):
+    return e['length']
 
-# returns material of the runway
-def runwayMaterial(rwy):
-    # no common vocab for this so we have to be a bit flexible
-    surf = rwy['surface'].upper()
-    if surf.find("CON") != -1:
-        return "concrete"
-    elif surf.find("ASP") != -1:
-        return "asphalt"
-    elif surf.find("TUR") != -1:
-        return "astroturf"
-    elif surf.find("DIRT") != -1:
-        return "dirt"
-    elif surf.find("GRV") != -1 or surf.find("GRAV") != -1:
-        return "gravel"
-    elif surf.find("SAND") != -1:
-        return "sand"
-    elif surf.find("WAT") != -1:
-        return "water"
-    elif surf.find("MAT") != -1:
-        return "mat"
-    elif surf.find("GRASS") != -1:
-        return "grass"
-    else:
-        return ""
+def openAndMatchesICAO(runway):
+    refId = runway['airport_ident']
+    return refId == code and runway['closed'] == "0",
 
+def runwayProcess(runway, args):
+    runway['length'] = int(runway['length_ft'])
 
+runwayList = queryCSV('runways.csv', openAndMatchesICAO, runwayProcess)
 runwayList.sort(key=minLength)
+
 for runway in runwayList:
-    rmat = runwayMaterial(runway)
+    rmat = runwayMaterial(runway['surface'])
     if len(rmat) > 0:
         matStr = ", " + rmat
     else:
@@ -196,36 +137,37 @@ for runway in runwayList:
     else:
         print("Runway " + runway['le_ident'] + leHeadingStr + " / " + runway['he_ident'] + heHeadingStr  + " -- " + runway['length_ft'] + " ft" + matStr)
 
-# com frequencies
-nearbyComFreqs=[]
-with open(DATA_DIR+'airport-frequencies.csv', newline='') as csvfile:
-    freqs = csv.DictReader(csvfile)
-    for freq in freqs:
-        refId = freq['airport_ident']
-        if refId == code:
-            nearbyComFreqs.append(freq)
+# QUERY -- airport com frequencies
+def matchesICAOCode(freq):
+    return freq['airport_ident'] == code,
+
+nearbyComFreqs = queryCSV('airport-frequencies.csv', matchesICAOCode)
 
 if len(nearbyComFreqs) > 0:
     print("")
     for freq in nearbyComFreqs:
         print(freq['type'] + "\t" + freq['frequency_mhz'] + " mHz\t(" + freq['description'] + ")")
 
-# show 5 closest navaids within 30nm
-closenavaids=[]
-with open(DATA_DIR+'navaids.csv', newline='') as csvfile:
-    navaids = csv.DictReader(csvfile)
-    for navaid in navaids:
-        navLat = float(navaid['latitude_deg'])
-        navLong = float(navaid['longitude_deg'])
-        dist = dist_coord(apLat, apLong, navLat, navLong)
-        if dist <= 30:
-            navaid['dist'] = dist
-            navMagVar = MV.declination(navLat, navLong,0)
-            brg = wrap_brg(brg_coord(navLat, navLong, apLat, apLong) - navMagVar)
-            navaid['radial'] = str(int(round(brg)))
-            closenavaids.append(navaid)
+# QUERY --  5 closest navaids to airport within 30nm
 
+# filter by navaids within 30 nm
+def isWithinRange(navaid):
+    navLat = float(navaid['latitude_deg'])
+    navLong = float(navaid['longitude_deg'])
+    dist = dist_coord(apLat, apLong, navLat, navLong)
+    return (dist<=30, dist, navLat, navLong)
+
+# save distance and radial to airport
+def navaidPostprocess(navaid, args):
+    dist, navLat, navLong = args
+    navaid['dist'] = dist
+    navMagVar = MV.declination(navLat, navLong,0)
+    brg = wrap_brg(brg_coord(navLat, navLong, apLat, apLong) - navMagVar)
+    navaid['radial'] = str(int(round(brg)))
+
+closenavaids = queryCSV('navaids.csv', isWithinRange, navaidPostprocess)
 closenavaids.sort(key=minDist)
+
 if len(closenavaids) > 0:
     print("")
     for k in range(min(len(closenavaids),5)):
@@ -239,20 +181,20 @@ if len(closenavaids) > 0:
             freq = ""
         print(str(round(navaid['dist'],1)) + " nm/rad " + navaid['radial'] + "°:\t" + navaid['ident'] + " (" + navaid['name'] + " " + navaid['type'] + ")" + freq)
 
-nearbyAirports = []
-# find airports within 20nm
-with open(DATA_DIR+'airports.csv', newline='') as csvfile:
-    airports = csv.DictReader(csvfile)
-    for airport in airports:
-        ident = airport['ident']
-        aLat = float(airport['latitude_deg'])
-        aLong = float(airport['longitude_deg'])
-        dist = dist_coord(apLat, apLong, aLat, aLong)
-        if ident != code and dist <= 20 and (showHelipads or airport['type'].find("airport") != -1):
-            airport['dist'] = dist
-            nearbyAirports.append(airport)
+# QUERY - other airports within 20nm
+def airportFilter(airport):
+    ident = airport['ident']
+    aLat = float(airport['latitude_deg'])
+    aLong = float(airport['longitude_deg'])
+    dist = dist_coord(apLat, apLong, aLat, aLong)
+    return (ident != code and dist <= 20 and (showHelipads or airport['type'].find("airport") != -1), dist)
 
+def airportProcess(airport, args):
+    airport['dist'] = args[0]
+
+nearbyAirports = queryCSV('airports.csv', airportFilter, airportProcess)
 nearbyAirports.sort(key=minDist)
+
 if len(nearbyAirports) > 0:
     codeString = nearbyAirports[0]['ident']
     for k in range(len(nearbyAirports)-1):
@@ -262,149 +204,6 @@ if len(nearbyAirports) > 0:
 # find & decode updated remarks
 s = requests.Session() 
 chart_soup = BeautifulSoup(s.get(CHART_SOURCE + code).text, features="html.parser")
-remarkDict = {  'opns':"operations",
-                'dsgnd':"designated",
-                'heli':"helipad",
-                'extdd':"extended",
-                'dep':"departure",
-                'deps':"departures",
-                'apch':"approach",
-                'apchs':"approaches",
-                'rsrtd':"restricted",
-                'auth':"authorized",
-                'mntn':"maintain",
-                'ry':"runway",
-                "rwy":"runway",
-                'ne':"northeast",
-                'sw':"southwest",
-                "se":"southeast",
-                "nw":"northwest",
-                "n":"north",
-                "s":"south",
-                "e":"east",
-                "w":"west",
-                "prmary":"primary",
-                "ohd":"overhead",
-                "fm":"from",
-                "byd":"beyond",
-                "rcmdd":"recommended",
-                "pat":"pattern", 
-                "deg":"degree",
-                "oper":"operating",
-                "arpt":"airport",
-                "hel":"helicopters",
-                "mt":"mountain",
-                "ovr":"over",
-                "ctc":"contact",
-                "lctd":"located",
-                "artcc":"air route traffic control center",
-                "atcc":"air traffic control center",
-                "tsnt":"transient",
-                "clsd":"closed",
-                "pvt":"private",
-                "sfc":"surface",
-                "acft":"aircraft",
-                "psnl":"personnel",
-                "efct":"effect",
-                "lmtd":"limited",
-                "trml":"terminal",
-                "non-sked":"non-scheduled",
-                "sked":"scheduled",
-                "trnsp":"transport",
-                "rqrd":"required",
-                "arr":"arrival",
-                "intl":"international",
-                "emerg":"emergency",
-                "fac":"facility",
-                "facs":"facilities",
-                "avbl":"available",
-                "proc":"procedure",
-                "procs":"procedures",
-                "hrs":"hours",
-                "coml":"commercial",
-                "tfc":"traffic",
-                "invof":"in the vicinity of",
-                "mi":"mile",
-                "sta":"straight in approach",
-                "stas":"straight in approaches",
-                "atct":"air traffic control tower",
-                "lcl":"local",
-                "trng":"training",
-                "twy":"taxiway",
-                "twys":"taxiways",
-                "freq":"frequency",
-                "freqs":"frequencies",
-                "una":"unable",
-                "agri":"agricultural",
-                "excp":"except",
-                "pwrd":"powered",
-                "svcs":"services",
-                "svc":"service",
-                "mil":"military",
-                "maint":"maintenance",
-                "btn":"between",
-                "lgtd":"lighted",
-                "vcnty":"vicinity",
-                "nmrs":"numerous",
-                "turb":"turbulence",
-                "rstd":"restricted",
-                "flt":"flight",
-                "ops":"operations",
-                "gtr":"greater",
-                "opn":"operation",
-                "lgts":"lights",
-                "authd":"authorized",
-                "pwr":"power",
-                "prkg":"parking",
-                "trmls":"terminals",
-                "intrpd":"interrupted",
-                "mnm":"minimum",
-                "psn":"position",
-                "txg":"taxiing",
-                "haz":"hazard",
-                "inbd":"inbound",
-                "obnd":"outbound",
-                "sbnd":"southbound",
-                "wbnd":"westbound",
-                "nbnd":"northbound",
-                "ebnd":"eastbound",
-                "len":"length",
-                "offl":"official",
-                "bus":"business",
-                "btwn":"between",
-                "thld":"thrust hold",
-                "sgl":"single",
-                "eng":"engine",
-                "grvl":"gravel"
-            }
-
-punctDict = ['/', '.', ';', ',', ' ', ':','(',')']
-
-def customSplit(str):
-    tokens=[]
-    cur=0
-    for k in range(len(str)):
-        if str[k] in punctDict:
-            if k == cur:
-                word = ""
-            else:
-                word = str[cur:k]
-            tokens.append({'word':word,'punct':str[k]})
-            cur=k+1
-    if cur < len(str):
-        tokens.append({'word':str[cur:],'punct':""})
-    return tokens
-
-def decode_remark(rtext):
-    finalTxt = ""
-    tokens = customSplit(rtext.lower())
-    for token in tokens:
-        if token['word'] in remarkDict.keys():
-            word = remarkDict[token['word']]
-        else:
-            word = token['word']
-        finalTxt = finalTxt + word + token['punct']
-    return finalTxt
 
 remarks = []
 for div in chart_soup.find_all('div'):
