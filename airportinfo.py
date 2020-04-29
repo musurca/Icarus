@@ -52,16 +52,16 @@ def fseAirportMatchesICAO(airport):
 
 fse_airport = db.findFirst('fse/icaodata.csv', fseAirportMatchesICAO)
 
-if mod_airport != None:
-    def closestModernAirports(airport):
+def closestModernAirports(airport):
         lat = float(airport['latitude_deg'])
         lon = float(airport['longitude_deg'])
         dist = globenav.dist_coord(fseLat, fseLong, lat, lon)
         return dist <= 100, dist
-    
-    def closestProcess(airport, args):
+
+def closestProcess(airport, args):
         airport['dist'] = args[0]
 
+if mod_airport != None:    
     if fse_airport != None:
         modLat = float(mod_airport['latitude_deg'])
         modLong = float(mod_airport['longitude_deg'])
