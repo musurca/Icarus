@@ -32,22 +32,15 @@ else:
 possibleSources=[]
 possibleDests=[]
 
-def matchICAOCodesAirports(element):
-    ident = element['ident']
-    if ident == src or element['keywords'].find(src) != -1:
-        possibleSources.append(element)
-    elif ident == dst or element['keywords'].find(dst) != -1:
-        possibleDests.append(element)
-
-def matchICAOCodesNavaids(element):
+def matchICAOCodes(element):
     ident = element['ident']
     if ident == src:
         possibleSources.append(element)
     elif ident == dst:
         possibleDests.append(element)
 
-db.execute('airports.csv', matchICAOCodesAirports)
-db.execute('navaids.csv', matchICAOCodesNavaids)
+db.execute('airports.csv', matchICAOCodes)
+db.execute('navaids.csv', matchICAOCodes)
 
 if len(possibleSources) == 0 or len(possibleDests) == 0:
     if len(possibleSources) == 0:
