@@ -220,12 +220,12 @@ if len(nearbyComFreqs) > 0:
 
 # QUERY --  5 closest navaids to airport within 30nm
 
-# filter by navaids within 30 nm
+# filter by navaids within 50 nm
 def isWithinRange(navaid):
     navLat = float(navaid['latitude_deg'])
     navLong = float(navaid['longitude_deg'])
     dist = globenav.dist_coord(apLat, apLong, navLat, navLong)
-    return (dist<=30, dist, navLat, navLong)
+    return (dist<=50, dist, navLat, navLong)
 
 # save distance and radial to airport
 def navaidPostprocess(navaid, args):
