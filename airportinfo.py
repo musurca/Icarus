@@ -80,7 +80,8 @@ if mod_airport != None:
             curFseAirports.sort(key=minDist)
 
             if len(curFseAirports) == 0:
-                sys.exit("Did you mean " + mod_airport['name'] + " (" + mod_airport['ident'] + "), or " + fse_airport['name'] + " (formerly " + fse_airport['icao'] + ")?")
+                # We can't solve this, so err on the side of the modern airport
+                airport = mod_airport
             else:
                 for airport in curFseAirports:
                     substr = longestSubstringFinder(airport['name'], fse_airport['name'])
@@ -92,7 +93,12 @@ if mod_airport != None:
 
                 curFseAirport = curFseAirports[len(curFseAirports)-1]
 
-                sys.exit("Did you mean " + mod_airport['name'] + " (" + mod_airport['ident'] + "), or " + curFseAirport['name'] + " (" + curFseAirport['ident'] + " — formerly " + code + ")?")
+                print("Did you mean " + mod_airport['name'] + " (" + mod_airport['ident'] + "), or " + curFseAirport['name'] + " (" + curFseAirport['ident'] + " — formerly " + code + ")?")
+                newCode = input("Enter current ICAO code (or press Return for " + code + "): ").rstrip().upper()
+                if (not newCode) or newCode != curFseAirport['ident']:
+                    airport = mod_airport
+                else:
+                    airport = curFseAirport
     else:
         airport = mod_airport
 else:
