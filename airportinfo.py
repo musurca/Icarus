@@ -8,6 +8,7 @@ TODO: if you can't find the airport code, try putting a 'K' in front of it
 TODO: if you can't find the airport code and it's 4-letters long, try removing the first letter
 TODO: maybe make this into a general info utility that also works on navaids
 TODO: handle hybrid runway materials (or maybe just get entire list of possibilites and classify)
+TODO: option for displaying true or magnetic headings (currently magnetic by default)
 
 '''
 import requests
@@ -115,6 +116,7 @@ else:
 if airport != None:
     apLat = float(airport['latitude_deg'])
     apLong = float(airport['longitude_deg'])
+    apMagVar = MV.declination(apLat, apLong,0)
     apName = airport['name']
     apId = airport['id']
     apElev = airport['elevation_ft']
@@ -193,12 +195,16 @@ for runway in runwayList:
         matStr = matStr + " (L)"
 
     if len(runway['le_heading_degT']) > 0:
-        leHeadingStr = " (" + str(int(round(float(runway['le_heading_degT'])))) + "°)"
+        leHeadingDeg = globenav.wrap_brg(float(runway['le_heading_degT']) - apMagVar)
+
+        leHeadingStr = " (" + str(int(round(leHeadingDeg))) + "°)"
     else:
         leHeadingStr = ""
     
     if len(runway['he_heading_degT']) > 0:
-        heHeadingStr = " (" + str(int(round(float(runway['he_heading_degT'])))) + "°)"
+        heHeadingDeg = globenav.wrap_brg(float(runway['he_heading_degT']) - apMagVar)
+
+        heHeadingStr = " (" + str(int(round(heHeadingDeg))) + "°)"
     else:
         heHeadingStr = ""
 
