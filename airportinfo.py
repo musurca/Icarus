@@ -18,11 +18,14 @@ from bs4 import BeautifulSoup
 
 from igrf.magvar import Magvar
 
-from utils import db, runwayMaterial, decode_remark, globenav
+from utils import db, runwayMaterial, decode_remark, globenav, longestSubstringFinder
 
 CHART_SOURCE = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
 
 MV = Magvar()
+
+def minDist(e):
+    return e['dist']
 
 if len(sys.argv) > 1:
     code = sys.argv[1].upper()
@@ -35,10 +38,73 @@ if len(sys.argv) > 2:
         showHelipads = True
 
 # QUERY - find airport by provided ICAO code
+airport = None
+
+# check updated list of airports
 def airportMatchesICAO(airport):
     return airport['ident'] == code or airport['keywords'].find(code) != -1
 
-airport = db.findFirst('airports.csv', airportMatchesICAO)
+mod_airport = db.findFirst('airports.csv', airportMatchesICAO)
+
+# check archaic FSX/FSE list of airports
+def fseAirportMatchesICAO(airport):
+    return airport['icao'] == code
+
+fse_airport = db.findFirst('fse/icaodata.csv', fseAirportMatchesICAO)
+
+if mod_airport != None:
+    def closestModernAirports(airport):
+        lat = float(airport['latitude_deg'])
+        lon = float(airport['longitude_deg'])
+        dist = globenav.dist_coord(fseLat, fseLong, lat, lon)
+        return dist <= 100, dist
+    
+    def closestProcess(airport, args):
+        airport['dist'] = args[0]
+
+    if fse_airport != None:
+        modLat = float(mod_airport['latitude_deg'])
+        modLong = float(mod_airport['longitude_deg'])
+        fseLat = float(fse_airport['lat'])
+        fseLong = float(fse_airport['lon'])
+        dist = globenav.dist_coord(modLat, modLong, fseLat, fseLong)
+        if dist <= 2:
+            # Entries are within 2nm, close enough for gov't work, move on
+            airport = mod_airport
+        else:
+            # Discrepancy -- we got some 'splainin to do!
+            fseLat = float(fse_airport['lat'])
+            fseLong = float(fse_airport['lon'])
+
+            curFseAirports = db.query('airports.csv', closestModernAirports, closestProcess)
+            curFseAirports.sort(key=minDist)
+
+            if len(curFseAirports) == 0:
+                sys.exit("Did you mean " + mod_airport['name'] + " (" + mod_airport['ident'] + "), or " + fse_airport['name'] + " (formerly " + fse_airport['icao'] + ")?")
+            else:
+                for airport in curFseAirports:
+                    substr = longestSubstringFinder(airport['name'], fse_airport['name'])
+                    airport['nameMatchLen'] = len(substr)
+                
+                def minSublen(e):
+                    return e['nameMatchLen']
+                curFseAirports.sort(key=minSublen)
+
+                curFseAirport = curFseAirports[len(curFseAirports)-1]
+
+                sys.exit("Did you mean " + mod_airport['name'] + " (" + mod_airport['ident'] + "), or " + curFseAirport['name'] + " (" + curFseAirport['ident'] + " — formerly " + code + ")?")
+    else:
+        airport = mod_airport
+else:
+    if fse_airport != None:
+        fseLat = float(fse_airport['lat'])
+        fseLong = float(fse_airport['lon'])
+
+        mod_airports = db.query('airports.csv', closestModernAirports, closestProcess)
+        mod_airports.sort(key=minDist)
+
+        if len(mod_airports) > 0:
+            airport = mod_airports[0]
 
 if airport != None:
     apLat = float(airport['latitude_deg'])
@@ -79,9 +145,6 @@ def cityProcess(city, args):
     city['dist'] = args[0]
 
 cityList = db.query('/cities/uscities.csv', isCityWithin20NM, cityProcess)
-
-def minDist(e):
-    return e['dist']
 
 def minPopulation(e):
     return float(e['population'])
