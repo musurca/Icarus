@@ -42,7 +42,7 @@ airport = None
 
 # check updated list of airports
 def airportMatchesICAO(airport):
-    return airport['ident'] == code or airport['keywords'].find(code) != -1
+    return airport['ident'] == code
 
 mod_airport = db.findFirst('airports.csv', airportMatchesICAO)
 
