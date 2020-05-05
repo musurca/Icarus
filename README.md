@@ -1,6 +1,8 @@
 # Icarus
  CLI tools for General Aviation.
 
+![Example](https://github.com/musurca/Icarus/raw/master/images/screen.png)
+
 Dependencies:
 * numpy
 * scipy 
