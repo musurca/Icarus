@@ -19,7 +19,7 @@ Prints out useful information about an airport, including:
 * nearby navaids
 * nearby airports
 
-NOTE: All headings are magnetic, calculated by magnetic declination based on the current date.
+NOTE: All headings are magnetic, calculated by magnetic declination at the airport on the current date via the IGRF-13 model.
 
 ### diagram
 ```
