@@ -6,10 +6,13 @@ Calculates the direct distance between two airport/navaids.
 '''
 
 import sys
+from rich.console import Console
+from rich.markdown import Markdown
 
 from igrf.magvar import Magvar
-
 from utils import db, globenav
+
+console = Console()
 
 MV = Magvar()
 
@@ -95,5 +98,8 @@ dist = globenav.dist_coord(srcLat,srcLong,dstLat,dstLong)
 # account for magnetic declination at midpoint between navigation points
 brg = globenav.wrap_brg(globenav.brg_coord(srcLat, srcLong, dstLat, dstLong) - MV.declination((dstLat+srcLat)/2,(dstLong+srcLong)/2,0))
 
-print(src + " (" + srcName + ") --> " + dst + " (" + dstName + ")")
-print(str(round(dist,1)) + " nm @ " + str(int(round(brg)))+"°")
+print("")
+console.print(Markdown("# " + src + " (" + srcName + ") --> " + dst + " (" + dstName + ")"))
+print("")
+console.print(Markdown("### " + (str(round(dist,1)) + " nm @ " + str(int(round(brg)))+"°")))
+print("")
