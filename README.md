@@ -55,13 +55,16 @@ updatedb
 Downloads most recent database of airports, navaids, and radio frequencies.
 
 ## Dependencies
-* Python 3
+* [Python 3](https://www.python.org/downloads/)
 * numpy
 * scipy 
 * wget 
 * BeautifulSoup 4
 * [rich](https://github.com/willmcgugan/rich)
 
+1) [Download and install latest release of Python 3.](https://www.python.org/downloads/)
+
+2) From the command line:
 ```
 pip install numpy scipy wget beautifulsoup4 rich
 ```
