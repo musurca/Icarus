@@ -16,6 +16,9 @@ import sys
 from math import sin, cos, sqrt, atan2, radians, degrees
 
 from bs4 import BeautifulSoup
+from rich.console import Console
+from rich.table import Column, Table, box
+from rich.markdown import Markdown
 
 from igrf.magvar import Magvar
 
@@ -24,6 +27,7 @@ from utils import db, runwayMaterial, decode_remark, globenav, longestSubstringF
 CHART_SOURCE = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
 
 MV = Magvar()
+console = Console()
 
 def minDist(e):
     return e['dist']
@@ -134,7 +138,7 @@ else:
 code = airport['ident']
 
 print("")
-print(apName + " (" + code + ")")
+console.print(Markdown("# "+apName + " (" + code + ")"))
 if apLat >= 0:
     latDir = "°N"
 else:
@@ -145,7 +149,7 @@ else:
     longDir = "°W"
 latText = str(round(abs(apLat),6)) + latDir
 longText = str(round(abs(apLong),6)) + longDir
-print(latText + ", " + longText + ", elev. " + apElev + " ft ASL")
+console.print(Markdown("### *" + latText + ", " + longText + " / " + apElev + " ft ASL*"))
 
 # QUERY - find closest city within 20nm
 def isCityWithin20NM(city):
@@ -171,9 +175,8 @@ if len(cityList) > 0:
     else:
         cityList.sort(key=minPopulation)
         city = cityList[len(cityList)-1]
-    print("Closest city: " + city['city_ascii'] + ", " + city['state_id'] + " (" + str(round(city['dist'],1)) + "nm)")
-
-print("------------------------------------------------------")      
+    console.print(Markdown("### *Closest city: " + city['city_ascii'] + ", " + city['state_id'] + " (" + str(round(city['dist'],1)) + "nm)*"))   
+print("")
 
 # QUERY - airport runways
 def minLength(e):
@@ -189,6 +192,11 @@ def runwayProcess(runway, args):
 runwayList = db.query('runways.csv', openAndMatchesICAO, runwayProcess)
 runwayList.sort(key=minLength)
 
+runwayTable = Table(show_header=False, box=box.MINIMAL)
+runwayTable.add_column("Description", style="bold")
+runwayTable.add_column("Length", justify="right")
+runwayTable.add_column("Material")
+runwayTable.add_column("Lighted")
 for runway in runwayList:
     rmat = runwayMaterial(runway['surface'])
     if len(rmat) > 0:
@@ -196,8 +204,10 @@ for runway in runwayList:
     else:
         matStr = ""
 
+    rLight = ""
     if runway['lighted'] == '1':
-        matStr = matStr + " (L)"
+        #matStr = matStr + " (L)"
+        rLight = "(L)"
 
     if len(runway['le_heading_degT']) > 0:
         leHeadingDeg = globenav.wrap_brg(float(runway['le_heading_degT']) - apMagVar)
@@ -213,10 +223,17 @@ for runway in runwayList:
     else:
         heHeadingStr = ""
 
+    
     if runway['le_ident'][0:1] == "H":
-        print("Helipad " + runway['le_ident'] + " -- " + runway['length_ft'] + " ft" + matStr)
+        rType="Helipad"
+        rDesc=runway['le_ident']
+        #print("Helipad " + runway['le_ident'] + " -- " + runway['length_ft'] + " ft" + matStr)
     else:
-        print("Runway " + runway['le_ident'] + leHeadingStr + " / " + runway['he_ident'] + heHeadingStr  + " -- " + runway['length_ft'] + " ft" + matStr)
+        rType="Runway"
+        rDesc=runway['le_ident'] + leHeadingStr + " ——— " + runway['he_ident'] + heHeadingStr
+        #print("Runway " + runway['le_ident'] + leHeadingStr + " / " + runway['he_ident'] + heHeadingStr  + " -- " + runway['length_ft'] + " ft" + matStr)
+    runwayTable.add_row(rType + " " + rDesc, runway['length_ft'] + " ft", rmat, rLight)
+console.print(runwayTable)
 
 # QUERY -- airport com frequencies
 def matchesICAOCode(freq):
@@ -226,8 +243,15 @@ nearbyComFreqs = db.query('airport-frequencies.csv', matchesICAOCode)
 
 if len(nearbyComFreqs) > 0:
     print("")
+    console.print(Markdown("### COMS"))
+    comTable = Table(show_header=True, box=box.SIMPLE)
+    comTable.add_column("Type")
+    comTable.add_column("Description")
+    comTable.add_column("Freq (mHz)")
     for freq in nearbyComFreqs:
-        print(freq['type'] + "\t" + freq['frequency_mhz'] + " mHz\t(" + freq['description'] + ")")
+        #print(freq['type'] + "\t" + freq['frequency_mhz'] + " mHz\t(" + freq['description'] + ")")
+        comTable.add_row(freq['type'], freq['description'], freq['frequency_mhz'])
+    console.print(comTable)
 
 # QUERY --  5 closest navaids to airport within 30nm
 
@@ -251,16 +275,25 @@ closenavaids.sort(key=minDist)
 
 if len(closenavaids) > 0:
     print("")
+    console.print(Markdown("### NAVAIDS"))
+    naTable = Table(show_header=True, box=box.SIMPLE)
+    naTable.add_column("ID", justify="center")
+    naTable.add_column("Name", justify="left")
+    naTable.add_column("Type", justify="left")
+    naTable.add_column("Distance", justify="right")
+    naTable.add_column("Radial", justify="right")
+    naTable.add_column("Freq (mHz)", justify="left")
     for k in range(min(len(closenavaids),5)):
         navaid = closenavaids[k]
         if navaid['frequency_khz'] != "":
             if navaid['type'] == "NDB":
-                freq = " @ " + navaid['frequency_khz'] + " mHz"
+                freq = navaid['frequency_khz']
             else:
-                freq = " @ " + str(float(navaid['frequency_khz'])/1000) + " mHz"
+                freq = str(float(navaid['frequency_khz'])/1000)
         else:
             freq = ""
-        print(str(round(navaid['dist'],1)) + " nm/rad " + navaid['radial'] + "°:\t" + navaid['ident'] + " (" + navaid['name'] + " " + navaid['type'] + ")" + freq)
+        naTable.add_row(navaid['ident'], navaid['name'], navaid['type'], str(round(navaid['dist'],1)) + " nm", navaid['radial']+"°", freq)
+    console.print(naTable)
 
 # QUERY - other airports within 20nm
 def airportFilter(airport):
@@ -277,24 +310,10 @@ nearbyAirports = db.query('airports.csv', airportFilter, airportProcess)
 nearbyAirports.sort(key=minDist)
 
 if len(nearbyAirports) > 0:
+    print("")
     codeString = nearbyAirports[0]['ident']
     for k in range(len(nearbyAirports)-1):
-        codeString = codeString + ", " + nearbyAirports[k+1]['ident']
-    print("\nWithin 20nm: " + codeString)
+        codeString = codeString + " " + nearbyAirports[k+1]['ident']
+    console.print("[b]Within 20nm:[/b]\n" + codeString)
 
-# find & decode updated remarks
-s = requests.Session() 
-chart_soup = BeautifulSoup(s.get(CHART_SOURCE + code).text, features="html.parser")
-
-remarks = []
-for div in chart_soup.find_all('div'):
-    if div.has_attr('id'):
-        if div['id'].find("remarks") != -1:
-            for remark in div.find_all('li'):
-                remarks.append(decode_remark(remark.text).upper())
-
-if len(remarks) > 0:
-    print("")
-    for remark in remarks:
-        print("- " + remark)
 print("")

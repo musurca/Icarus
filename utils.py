@@ -223,23 +223,23 @@ def runwayMaterial(txt):
     # no common vocab for this so we have to be a bit flexible
     surf = txt.upper()
     if surf.find("CON") != -1:
-        return "concrete"
+        return "Concrete"
     elif surf.find("ASP") != -1:
-        return "asphalt"
+        return "Asphalt"
     elif surf.find("TUR") != -1:
-        return "astroturf"
+        return "Astroturf"
     elif surf.find("DIRT") != -1:
-        return "dirt"
+        return "Dirt"
     elif surf.find("GRV") != -1 or surf.find("GRAV") != -1:
-        return "gravel"
+        return "Gravel"
     elif surf.find("SAND") != -1:
-        return "sand"
+        return "Sand"
     elif surf.find("WAT") != -1:
-        return "water"
+        return "Water"
     elif surf.find("MAT") != -1:
-        return "mat"
+        return "Mat"
     elif surf.find("GRASS") != -1:
-        return "grass"
+        return "Grass"
     else:
         return ""
 

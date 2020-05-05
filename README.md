@@ -1,10 +1,15 @@
 # Icarus
  CLI tools for General Aviation.
 
-Dependencies: numpy, scipy, wget, BeautifulSoup 4
+Dependencies:
+* numpy
+* scipy 
+* wget 
+* BeautifulSoup 4
+* rich
 
 ```
-pip install numpy scipy wget beautifulsoup4
+pip install numpy scipy wget beautifulsoup4 rich
 ```
 
 Airport/navaid data courtesy of [OurAirports](http://ourairports.com).
