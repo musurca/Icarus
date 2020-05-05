@@ -18,7 +18,9 @@ Prints out useful information about an airport, including:
 * relevant radio frequencies
 * nearby navaids
 * nearby airports
-  
+
+NOTE: All headings are magnetic, calculated by magnetic declination based on the current date.
+
 ### diagram
 ```
 diagram [ICAO]
