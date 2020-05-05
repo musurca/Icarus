@@ -94,12 +94,17 @@ if mod_airport != None:
 
                 curFseAirport = curFseAirports[len(curFseAirports)-1]
 
-                print("Did you mean " + mod_airport['name'] + " (" + mod_airport['ident'] + "), or " + curFseAirport['name'] + " (" + curFseAirport['ident'] + " — formerly " + code + ")?")
-                newCode = input("Enter current ICAO code (or press Return for " + code + "): ").rstrip().upper()
-                if (not newCode) or newCode != curFseAirport['ident']:
+                if curFseAirport['nameMatchLen'] < 5:
+                    print("Did you mean " + mod_airport['name'] + " (" + mod_airport['ident'] + "), or " + fse_airport['name'] + " (not in this database)?")
+                    input("(press return for " + code + ")")
                     airport = mod_airport
                 else:
-                    airport = curFseAirport
+                    print("Did you mean " + mod_airport['name'] + " (" + mod_airport['ident'] + "), or " + curFseAirport['name'] + " (" + curFseAirport['ident'] + " — formerly " + code + ")?")
+                    newCode = input("Enter current ICAO code (or press return for " + code + "): ").rstrip().upper()
+                    if (not newCode) or newCode != curFseAirport['ident']:
+                        airport = mod_airport
+                    else:
+                        airport = curFseAirport
     else:
         airport = mod_airport
 else:
