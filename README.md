@@ -12,8 +12,10 @@ ex:
 > airportinfo KLAX
 ```
 Prints out useful information about an airport, including:
-* runway length, orientation, and material
-* radio frequences
+* latitude / longitude and altitude
+* nearest city
+* runway length, orientation, material, and suitability for night operations
+* relevant radio frequencies
 * nearby navaids
 * nearby airports
   
