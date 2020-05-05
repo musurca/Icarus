@@ -30,7 +30,7 @@ if len(sys.argv) > 2:
 
 jetFuel = False
 if len(sys.argv) > 3:
-    if sys.argv[3] == "jeta":
+    if sys.argv[3].upper() == "JETA":
         jetFuel = True
 
 s = requests.Session() 
