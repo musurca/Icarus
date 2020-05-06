@@ -244,14 +244,16 @@ def runwayMaterial(txt):
         return ""
 
 # SPHERICAL NAVIGATION
+
 class globenav:
     # wrap a bearing in degrees to the range 0-359
     def wrap_brg(b):
-        if b < 0:
-            b = 360+b
-        elif b >= 360:
-            b = 360-b
-        return b
+        deg = b
+        while deg < 0:
+            deg = 360+deg
+        while deg >= 360:
+            deg = deg-360
+        return deg
 
     # true bearing from one global point to another
     def brg_coord(lat1,lon1,lat2,lon2):
