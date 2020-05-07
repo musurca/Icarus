@@ -83,7 +83,7 @@ Estimates wind aloft by taking the results of two distance readings from a fixed
 How to use:
 1) Point your aircraft on a course directly toward or directly away from a fixed reference point with distance measuring equipment (e.g., a VOR), then set autopilot to maintain heading, altitude, and speed.
 2) Record distance to reference point, start a timer, and wait for X seconds. Longer time intervals will produce more accurate results. An interval of 300-600 seconds (5-10 minutes) is ideal.
-3) After X seconds, record the new distance to the reference point as well as its deviation from its original bearing to your plane in degrees. Use negative degrees if the point has slipped to the left, and positive degrees if it has slipped to the right.
+3) After X seconds, record the new distance to the reference point as well as its deviation from its original bearing to your plane in degrees. Use negative degrees if the reference point has slipped to the left, and positive degrees if it has slipped to the right.
 4) Enter your recorded data into the wind program to estimate wind speed and direction.
 
 ## Dependencies
