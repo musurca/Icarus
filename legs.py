@@ -197,7 +197,7 @@ S.remove(S[0])
 S.remove(S[len(S)-1])
 
 naTable = Table(show_header=True, box=box.SIMPLE)
-naTable.add_column("Leg #", justify="center")
+naTable.add_column("Leg", justify="center")
 naTable.add_column("ID", justify="center")
 naTable.add_column("Name", justify="left")
 naTable.add_column("Distance", justify="right")
