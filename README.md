@@ -21,15 +21,6 @@ Prints out useful information about an airport, including:
 
 NOTE: All headings are magnetic, calculated by magnetic declination at the airport on the current date via the IGRF-13 model.
 
-### route
-```
-route [ICAO origin] [ICAO destination]
-
-ex:
-> route LFPG OMDB
-```
-Finds the shortest VOR-to-VOR route between two airports or navaids. You can filter by civilian, legacy, and military types.
-
 ### diagram
 ```
 diagram [ICAO]
@@ -57,11 +48,32 @@ ex:
 ```
 Prints current fuel prices (either 100LL or Jet-A) at ICAO location, and within 100 nm.
 
+### route
+```
+route [ICAO origin] [ICAO destination]
+
+ex:
+> route LFPG OMDB
+```
+Finds the shortest VOR-to-VOR route between two airports or navaids. You can filter by civilian, legacy, and military types.
+
 ### updatedb
 ```
 updatedb
 ```
 Downloads most recent database of airports, navaids, and radio frequencies.
+
+### wind
+```
+wind
+```
+Calculates wind aloft by taking the results of two distance readings from a fixed reference point. The resulting information can be fed into an E6B to determine course correction for leeway.
+
+How to use:
+1) Point your aircraft on a course directly toward or directly away from a fixed reference point with distance measuring equipment (e.g., a VOR), then set autopilot to maintain heading, altitude, and speed.
+2) Record distance to reference point, start a timer, and wait for X seconds. Longer time intervals will produce more accurate results. 300-600 seconds (5-10 minutes) is ideal.
+3) After X seconds, record the new distance to the reference point as well as your plane's deviation from its original bearing.
+4) Enter your recorded data into the wind program to determine wind speed and direction.
 
 ## Dependencies
 * [Python 3](https://www.python.org/downloads/)
@@ -69,13 +81,14 @@ Downloads most recent database of airports, navaids, and radio frequencies.
 * scipy 
 * wget 
 * BeautifulSoup 4
+* npyscreen 
 * [rich](https://github.com/willmcgugan/rich)
 
 1) [Download and install latest release of Python 3.](https://www.python.org/downloads/)
 
 2) From the command line:
 ```
-pip install numpy scipy wget beautifulsoup4 rich
+pip install numpy scipy wget beautifulsoup4 npyscreen rich
 ```
 
 ## Acknowledgements

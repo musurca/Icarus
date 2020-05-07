@@ -3,56 +3,65 @@
 
     Determine wind speed and direction by taking distance and bearing
     to a fixed reference point over a time interval.
-
-    1) Point your aircraft on a course directly toward
-       or directly away from a fixed reference point 
-       with distance measuring equipment (e.g., a VOR), 
-       then set autopilot to maintain heading, altitude, 
-       and speed.
-    2) Record distance to reference point, start the 
-       clock, and wait. Longer time intervals will 
-       produce more accurate results. 300-600 seconds 
-       (5-10 minutes) is ideal.
-    4) After X seconds, record the new distance to 
-       reference point as well as your plane's 
-       deviation from its bearing.
-    5) Enter numbers into program to determine 
-       wind speed and direction.
        
 '''
+import npyscreen
 
 from math import sin, cos, sqrt, radians, degrees, asin
 
 from utils import globenav
 
-print("")
-alt = float(input("Altitude (ft ASL): "))
-ias = float(input("Indicated airspeed (kts): "))
-d0 = float(input("TIME 0: Distance reading (nm): "))
-d1 = float(input("TIME 1: Distance reading (nm): "))
-dev = float(input("Course deviation (degrees, +/right, -/left): "))
-t = float(input("Time between readings (seconds): "))
+result=""
 
-if d1 > d0:
-   # if we're moving away, just flip the distances 
-   d1, d0 = d0, d1
+class WindApp(npyscreen.NPSApp):
+   def main(self):
+      F = npyscreen.Form(name = "ICARUS - Wind Aloft Calculator",)
+      altV  = F.add(npyscreen.TitleText, name = "Altitude (ft ASL):",)
+      iasV = F.add(npyscreen.TitleText, name = "Indicated airspeed (kts):",)
+      d0V = F.add(npyscreen.TitleText, name = "1st distance reading (nm):",)
+      d1V = F.add(npyscreen.TitleText, name = "2nd distance reading (nm):",)
+      devV = F.add(npyscreen.TitleText, name = "Course deviation (degrees, +/right, -/left): ",)
+      tV = F.add(npyscreen.TitleText, name = "Time between readings (seconds): ",)
+      
+      formIncomplete=True
+      while formIncomplete:
+         F.edit()
 
-tas = ias + ias*0.02*alt/1000
-t = t / (60*60)
-deltaDist = d0 - t*tas
+         try:
+            alt = float(altV.get_value())
+            ias = float(iasV.get_value())
+            d0 = float(d0V.get_value())
+            d1 = float(d1V.get_value())
+            dev = float(devV.get_value())
+            t = float(tV.get_value())
+            formIncomplete=False
+         except ValueError:
+            formIncomplete=True
 
-windMag = sqrt(d1**2 + deltaDist**2 - 2*d1*deltaDist*cos(radians(dev)))
-direction = degrees(asin( d1 * sin(radians(dev)) / windMag ))
-direction = globenav.wrap_brg(180 + globenav.wrap_brg(-direction))
+      if d1 > d0:
+         # if we're moving away, just flip the distances 
+         d1, d0 = d0, d1
 
-windSpeed = windMag/t
+      tas = ias + ias*0.02*alt/1000
+      t = t / (60*60)
+      deltaDist = d0 - t*tas
 
-moveDist = sqrt(d1**2 + d0**2 - 2*d1*d0*cos(radians(dev)))
-groundspeed = moveDist/t
+      windMag = sqrt(d1**2 + deltaDist**2 - 2*d1*deltaDist*cos(radians(dev)))
+      direction = degrees(asin( d1 * sin(radians(dev)) / windMag ))
+      direction = globenav.wrap_brg(180 + globenav.wrap_brg(-direction))
 
-windDirFrom = int(round(direction))
+      windSpeed = windMag/t
 
-print("")
-print("TAS / GS  : " + str(int(round(tas))) + " kts / " + str(int(round(groundspeed))) + " kts\n")
-print("  Wind    : " + str(windDirFrom)  + "° @ " + str(int(round(windSpeed))) + " kts")
-print("")
+      moveDist = sqrt(d1**2 + d0**2 - 2*d1*d0*cos(radians(dev)))
+      groundspeed = moveDist/t
+
+      windDirFrom = int(round(direction))
+
+      result = "\nTAS / GS  : " + str(int(round(tas))) + " kts / " + str(int(round(groundspeed))) + " kts\n  Wind    : " + str(windDirFrom)  + "° @ " + str(int(round(windSpeed))) + " kts\n"
+      npyscreen.notify_confirm(result, title="Result", form_color='STANDOUT', wrap=True, wide=False, editw=0)
+
+if __name__ != "__main__":
+   sys.exit()
+
+App = WindApp()
+App.run()
