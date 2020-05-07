@@ -65,12 +65,12 @@ updatedb
 ```
 Downloads most recent database of airports, navaids, and radio frequencies.
 
-### vor2vor
+### vorpath
 ```
-vor2vor [ICAO origin] [ICAO destination]
+vorpath [ICAO origin] [ICAO destination]
 
 ex:
-> vor2vor LFPG OMDB
+> vorpath LFPG OMDB
 ```
 Finds the shortest VOR-to-VOR route between two airports or navaids. You can filter by civilian, legacy, and military types.
 
