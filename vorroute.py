@@ -1,5 +1,5 @@
 '''
-route.py
+vorroute.py
 
 Finds the shortest VOR-to-VOR route between two airports or navaids.
 
@@ -58,9 +58,6 @@ Q = []
 dist = {}
 prev = {}
 
-def ID(e):
-    return e['ident']
-
 def matchICAOCodes(element):
     ident = element['ident']
     if ident == src:
@@ -108,12 +105,12 @@ else:
     region = possibleSources[0]['iso_country']
     anyRegion = False
 
-def minDist(e):
-    return e['dist']
+def minSortdist(e):
+    return e['sortdist']
 
 for dest in possibleDests:
-    dest['dist'] = distance(refSource,dest)
-possibleDests.sort(key=minDist)
+    dest['sortdist'] = distance(refSource,dest)
+possibleDests.sort(key=minSortdist)
 refDest = possibleDests[0]
 
 srcName = refSource['name']
@@ -162,9 +159,6 @@ elif routeSelect == "4":
     filterTypes = legTypes + modNonMilTypes
 elif routeSelect == "5":
     filterTypes = []
-print("")
-print("Please wait...")
-print("")
 
 # Eliminate unnecessary navaids
 Z = []
@@ -185,6 +179,8 @@ while Q:
             Z.append(e)
 
 Q = Z
+
+print("\nPlease wait... considering " + str(len(Q)) + " possible navaids.\n")
 
 def min_dist(e):
     return e['dist']
@@ -263,12 +259,14 @@ for i in range(len(S)):
     prevNode = navaid
     totalDist += nDist
 
-nDist = distance(prevNode, navaid)
+nDist = distance(prevNode, refDest)
 totalDist += nDist
 brgStr = ""
-if nDist > 0.5:
-    brgStr = str(int(round(bearing(prevNode, navaid)))) + "°"
-naTable.add_row(str(len(S)+2), refDest['ident'], refDest['name'], str(round(distance(prevNode, navaid),1)) + " nm", brgStr, "----", "----")
+distStr = ""
+if nDist > 0:
+    brgStr = str(int(round(bearing(prevNode, refDest)))) + "°"
+    distStr = str(round(nDist,1)) + " nm"
+naTable.add_row(str(len(S)+2), refDest['ident'], refDest['name'], distStr, brgStr, "----", "----")
 
 print("")
 console.print(Markdown("# VOR-to-VOR Route from " + src + " (" + srcName + ") to " + dst + " (" + dstName + ")"))
