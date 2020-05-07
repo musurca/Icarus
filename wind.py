@@ -18,8 +18,7 @@
        deviation from its bearing.
     5) Enter numbers into program to determine 
        wind speed and direction.
-
-    TODO: also calculate groundspeed
+       
 '''
 
 from math import sin, cos, sqrt, radians, degrees, asin
