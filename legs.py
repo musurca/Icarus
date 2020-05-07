@@ -1,5 +1,5 @@
 '''
-rangeroute.py
+legs.py
 
 Finds the shortest route between two airports such that each leg is within
 the maximum range of one's aircraft.
@@ -83,8 +83,6 @@ refSource = None
 refDest = None
 
 refSource = possibleSources[0]
-region = possibleSources[0]['iso_country']
-anyRegion = False
 
 def minSortdist(e):
     return e['sortdist']
@@ -133,25 +131,28 @@ elif routeSelect == "6":
     filterTypes = basic
 
 extremeDist = globenav.dist_coord(srcLat,srcLong,dstLat,dstLong)
-midLat = (srcLat+dstLat)/2
-midLon = (srcLong + dstLong)/2
+midLat = (srcLat + dstLat) / 2
+midLon = (srcLong + dstLong) / 2
 
 # Eliminate heliports or airports that are wildly out of range
 Z = []
 while Q:
     e = Q.pop()
     allow = True
-    eLat = float(e['latitude_deg'])
-    eLon = float(e['longitude_deg'])
-    if globenav.dist_coord(midLat,midLon,eLat,eLon) > extremeDist:
-        allow=False
-    else:
-        eType = e['type'].rstrip()
-        for fType in filterTypes:
-            if eType == fType:
+    if e != refSource and e != refDest:
+        eLat = float(e['latitude_deg'])
+        eLon = float(e['longitude_deg'])
+        if globenav.dist_coord(midLat,midLon,eLat,eLon) > extremeDist:
+            allow=False
+        else:
+            eType = e['type'].rstrip()
+            for fType in filterTypes:
+                if eType == fType:
+                    allow=False
+                    break
+            if eType.find("heli") != -1:
                 allow=False
-                break
-    if allow and e['type'].find("heli") == -1:
+    if allow:
         Z.append(e)
 
 Q = Z
@@ -215,9 +216,9 @@ for i in range(len(S)):
 nDist = distance(prevNode, refDest)
 totalDist += nDist
 brgStr = ""
-if nDist > 0.5:
+if nDist > 0:
     brgStr = str(int(round(bearing(prevNode, refDest)))) + "°"
-naTable.add_row(str(len(S)+1), refDest['ident'], refDest['name'], str(round(distance(prevNode, refDest),1)) + " nm", brgStr)
+naTable.add_row(str(len(S)+1), refDest['ident'], refDest['name'], str(round(nDist,1)) + " nm", brgStr)
 
 print("")
 console.print(Markdown("# Route from " + src + " (" + srcName + ") to " + dst + " (" + dstName + "), max leg distance of " + str(maxRange) + " nm"))

@@ -48,12 +48,12 @@ ex:
 ```
 Displays current avgas prices (either 100LL or Jet-A) at ICAO location, and within a desired range (100 nm by default).
 
-### rangeroute
+### legs
 ```
-rangeroute [ICAO origin] [ICAO destination] [max range in nm]
+legs [ICAO origin] [ICAO destination] [max range in nm]
 
 ex:
-> rangeroute KBGR BGMQ 500
+> legs KBGR BGMQ 500
 ```
 Finds the shortest route between two airports using multiple stops, in which the length of each leg of the trip is less than the maximum range of your aircraft specified.
 
@@ -65,12 +65,12 @@ updatedb
 ```
 Downloads most recent database of airports, navaids, and radio frequencies.
 
-### vorroute
+### vor2vor
 ```
-vorroute [ICAO origin] [ICAO destination]
+vor2vor [ICAO origin] [ICAO destination]
 
 ex:
-> vorroute LFPG OMDB
+> vor2vor LFPG OMDB
 ```
 Finds the shortest VOR-to-VOR route between two airports or navaids. You can filter by civilian, legacy, and military types.
 
