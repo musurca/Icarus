@@ -21,6 +21,15 @@ Prints out useful information about an airport, including:
 
 NOTE: All headings are magnetic, calculated by magnetic declination at the airport on the current date via the IGRF-13 model.
 
+### route
+```
+route [ICAO origin] [ICAO destination]
+
+ex:
+> route LFPG OMDB
+```
+Finds a VOR-to-VOR route between two airports or navaids. You can filter by civilian, legacy, and military types.
+
 ### diagram
 ```
 diagram [ICAO]
