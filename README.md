@@ -1,5 +1,5 @@
 # Icarus
- CLI tools for General Aviation.
+A suite of CLI tools for use in General Aviation and flight simulation.
 
 ![Example](https://github.com/musurca/Icarus/raw/master/images/screen.png)
 
@@ -11,7 +11,7 @@ airportinfo [ICAO]
 ex:
 > airportinfo KLAX
 ```
-Prints out useful information about an airport, including:
+Displays useful information about an airport, including:
 * latitude / longitude and altitude
 * nearest city
 * runway length, orientation, material, and suitability for night operations
@@ -28,7 +28,7 @@ diagram [ICAO]
 ex: 
 > diagram KJFK
 ```
-Downloads all available airport diagrams (PDF), approach/departure charts (PDF), and current remarks (TXT) to ./diagrams/[ICAO]. Remarks are also decoded/expanded where possible.
+Connects to the FAA database and downloads all available airport diagrams (PDF), approach/departure charts (PDF), and current remarks (TXT) to ./diagrams/[ICAO]. Remarks are also decoded/expanded where possible.
 
 ### distance
 ```
@@ -37,16 +37,16 @@ distance [ICAO origin] [ICAO destination]
 ex:
 > distance KSBA TRM 
 ```
-Prints out distance and magnetic heading from one ICAO location to another. Either origin or destination may be either an airport or a navaid.
+Displays the distance and magnetic heading on a direct course from one ICAO location to another. Either origin or destination may be either an airport or a navaid.
 
 ### fuel
 ```
-fuel [ICAO] [100LL OR JETA]
+fuel [ICAO] [100LL OR JETA] [range]
 
 ex:
 > fuel KSAN JETA
 ```
-Prints current fuel prices (either 100LL or Jet-A) at ICAO location, and within 100 nm.
+Displays current avgas prices (either 100LL or Jet-A) at ICAO location, and within a desired range (100 nm by default).
 
 ### route
 ```
@@ -67,13 +67,13 @@ Downloads most recent database of airports, navaids, and radio frequencies.
 ```
 wind
 ```
-Calculates wind aloft by taking the results of two distance readings from a fixed reference point. The resulting information can be fed into an E6B to determine course correction for leeway.
+Estimates wind aloft by taking the results of two distance readings from a fixed reference point. The resulting information can be fed into an E6B to determine course correction for leeway.
 
 How to use:
 1) Point your aircraft on a course directly toward or directly away from a fixed reference point with distance measuring equipment (e.g., a VOR), then set autopilot to maintain heading, altitude, and speed.
 2) Record distance to reference point, start a timer, and wait for X seconds. Longer time intervals will produce more accurate results. 300-600 seconds (5-10 minutes) is ideal.
 3) After X seconds, record the new distance to the reference point as well as your plane's deviation from its original bearing.
-4) Enter your recorded data into the wind program to determine wind speed and direction.
+4) Enter your recorded data into the wind program to calculate wind speed and direction.
 
 ## Dependencies
 * [Python 3](https://www.python.org/downloads/)
