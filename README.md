@@ -28,7 +28,7 @@ route [ICAO origin] [ICAO destination]
 ex:
 > route LFPG OMDB
 ```
-Finds a VOR-to-VOR route between two airports or navaids. You can filter by civilian, legacy, and military types.
+Finds the shortest VOR-to-VOR route between two airports or navaids. You can filter by civilian, legacy, and military types.
 
 ### diagram
 ```
