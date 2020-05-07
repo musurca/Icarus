@@ -72,16 +72,20 @@ else:
     region = possibleSources[0]['iso_country']
     anyRegion = False
 
-if len(possibleDests) > 1:
-    for dest in possibleDests:
-        country = dest['iso_country']
-        if region==country:
-            refDest = dest
-            break
-    if refDest == None:
-        refDest = possibleDests[0]
-else:
-    refDest = possibleDests[0]
+def distance(a,b):
+    aLat = float(a['latitude_deg'])
+    aLon = float(a['longitude_deg'])
+    bLat = float(b['latitude_deg'])
+    bLon = float(b['longitude_deg'])
+    return globenav.dist_coord(aLat, aLon, bLat, bLon)
+
+def minDist(e):
+    return e['dist']
+
+for dest in possibleDests:
+    dest['dist'] = distance(refSource,dest)
+possibleDests.sort(key=minDist)
+refDest = possibleDests[0]
 
 srcLat = float(refSource['latitude_deg'])
 srcLong = float(refSource['longitude_deg'])

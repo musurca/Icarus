@@ -18,6 +18,23 @@ console = Console()
 
 MV = Magvar()
 
+def distance(a,b):
+    aLat = float(a['latitude_deg'])
+    aLon = float(a['longitude_deg'])
+    bLat = float(b['latitude_deg'])
+    bLon = float(b['longitude_deg'])
+    return globenav.dist_coord(aLat, aLon, bLat, bLon)
+
+# bearing from A -> B
+def bearing(a,b):
+    aLat = float(a['latitude_deg'])
+    aLon = float(a['longitude_deg'])
+    bLat = float(b['latitude_deg'])
+    bLon = float(b['longitude_deg'])
+    midLat = (aLat + bLat) / 2
+    midLon = (aLon + bLon) / 2
+    return globenav.wrap_brg(globenav.brg_coord(aLat, aLon, bLat, bLon) - MV.declination(midLat, midLon, 0))
+
 if len(sys.argv) > 2:
     src = sys.argv[1].upper()
     dst = sys.argv[2].upper()
@@ -91,16 +108,13 @@ else:
     region = possibleSources[0]['iso_country']
     anyRegion = False
 
-if len(possibleDests) > 1:
-    for dest in possibleDests:
-        country = dest['iso_country']
-        if region==country:
-            refDest = dest
-            break
-    if refDest == None:
-        refDest = possibleDests[0]
-else:
-    refDest = possibleDests[0]
+def minDist(e):
+    return e['dist']
+
+for dest in possibleDests:
+    dest['dist'] = distance(refSource,dest)
+possibleDests.sort(key=minDist)
+refDest = possibleDests[0]
 
 srcName = refSource['name']
 dstName = refDest['name']
@@ -127,26 +141,27 @@ milTypes    = ['TACAN']
 modNonMilTypes = ['VOR-DME', 'VOR']
 modTypes    = ['VOR-DME', 'VORTAC','VOR']
 legTypes    = ['NDB', 'NDB-DME']
-filterTypes = []
+# modern civilian by default
+filterTypes = milTypes + legTypes
 
 print("")
 print("Enter number of VOR route type (or press Return for 1):\n")
-print("  [1] - All available ")
-print("  [2] - Civilian (VOR/DME & NDB)")
-print("  [3] - Modern civilian (VOR/DME)")
-print("  [4] - Legacy civilian (NDB)")
-print("  [5] - Military (TACAN & VORTAC)")
+print("  [1] - Modern civilian (VOR/DME only)")
+print("  [2] - Legacy civilian (NDB only)")
+print("  [3] - All civilian (VOR/DME & NDB)")
+print("  [4] - Military (TACAN/VORTAC only)")
+print("  [5] - All available ")
 
 print("")
 routeSelect = input("> ").rstrip()
 if routeSelect == "2":
-    filterTypes = milTypes
-elif routeSelect == "3":
-    filterTypes = milTypes + legTypes
-elif routeSelect == "4":
     filterTypes = modTypes + milTypes
-elif routeSelect == "5":
+elif routeSelect == "3":
+    filterTypes = milTypes
+elif routeSelect == "4":
     filterTypes = legTypes + modNonMilTypes
+elif routeSelect == "5":
+    filterTypes = []
 print("")
 print("Please wait...")
 print("")
@@ -175,7 +190,7 @@ def min_dist(e):
     return e['dist']
 
 VOR_ranges = { 'LOW':25, 'MEDIUM':40, 'HIGH':130, 'UNKNOWN':25, '':25 }
-NDB_ranges = { 'LOW':17.5, 'MEDIUM':49, 'HIGH':475, 'UNKNOWN':17.5, '':17.5 }
+NDB_ranges = { 'LOW':25, 'MEDIUM':250, 'HIGH':500, 'UNKNOWN':15, '':15 }
 
 while len(Q) > 0:
     Q.sort(key=min_dist)
@@ -216,28 +231,11 @@ if u['prev'] != None or u == refSource:
         u = u['prev']
 
 if len(S) == 0:
-    sys.exit("Can't find a valid route!\n")
+    sys.exit("Can't find a valid route! Try a more permissive route type (e.g. \"All civilian\" or \"All available\").\n")
 
 # remove source and destination
 S.remove(S[0])
 S.remove(S[len(S)-1])
-
-def distance(a,b):
-    aLat = float(a['latitude_deg'])
-    aLon = float(a['longitude_deg'])
-    bLat = float(b['latitude_deg'])
-    bLon = float(b['longitude_deg'])
-    return globenav.dist_coord(aLat, aLon, bLat, bLon)
-
-# bearing from A -> B
-def bearing(a,b):
-    aLat = float(a['latitude_deg'])
-    aLon = float(a['longitude_deg'])
-    bLat = float(b['latitude_deg'])
-    bLon = float(b['longitude_deg'])
-    midLat = (aLat + bLat) / 2
-    midLon = (aLon + bLon) / 2
-    return globenav.wrap_brg(globenav.brg_coord(aLat, aLon, bLat, bLon) - MV.declination(midLat, midLon, 0))
 
 naTable = Table(show_header=True, box=box.SIMPLE)
 naTable.add_column("#", justify="center")
