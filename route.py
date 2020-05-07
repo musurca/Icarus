@@ -148,6 +148,8 @@ elif routeSelect == "4":
 elif routeSelect == "5":
     filterTypes = legTypes + modNonMilTypes
 print("")
+print("Please wait...")
+print("")
 
 # Eliminate unnecessary navaids
 Z = []
