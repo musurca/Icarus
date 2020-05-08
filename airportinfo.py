@@ -125,10 +125,10 @@ else:
 if airport != None:
     apLat = float(airport['latitude_deg'])
     apLong = float(airport['longitude_deg'])
-    apMagVar = MV.declination(apLat, apLong,0)
     apName = airport['name']
     apId = airport['id']
     apElev = airport['elevation_ft']
+    apMagVar = MV.declination(apLat, apLong, int(apElev))
     apType = airport['type']
     if airport['type'].find("heli") != -1:
         showHelipads = True
@@ -149,7 +149,12 @@ else:
     longDir = "°W"
 latText = str(round(abs(apLat),6)) + latDir
 longText = str(round(abs(apLong),6)) + longDir
+if apMagVar < 0:
+    magVarDir = "W"
+else:
+    magVarDir = "E"
 console.print(Markdown("### *" + latText + ", " + longText + " / " + apElev + " ft ASL*"))
+console.print(Markdown("### *Magnetic declination: " + str(round(apMagVar,1)) + "° (" + magVarDir + ")*"))
 
 # QUERY - find closest city within 20nm
 def isCityWithin20NM(city):
@@ -314,6 +319,7 @@ if len(nearbyAirports) > 0:
     codeString = nearbyAirports[0]['ident']
     for k in range(len(nearbyAirports)-1):
         codeString = codeString + " " + nearbyAirports[k+1]['ident']
-    console.print("[b]Within 20nm:[/b]\n" + codeString)
+    console.print("[b]Within 20nm:[/b]")
+    print(codeString)
 
 print("")
