@@ -18,6 +18,7 @@ class WindApp(npyscreen.NPSApp):
       F = npyscreen.Form(name = "ICARUS - Wind Aloft Calculator",)
       altV  = F.add(npyscreen.TitleText, name = "Altitude (ft ASL):",)
       iasV = F.add(npyscreen.TitleText, name = "Indicated airspeed (kts):",)
+      headV = F.add(npyscreen.TitleText, name = "Heading (degrees):",)
       d0V = F.add(npyscreen.TitleText, name = "1st distance reading (nm):",)
       d1V = F.add(npyscreen.TitleText, name = "2nd distance reading (nm):",)
       devV = F.add(npyscreen.TitleText, name = "Course deviation (degrees, +/right, -/left): ",)
@@ -30,6 +31,7 @@ class WindApp(npyscreen.NPSApp):
          try:
             alt = float(altV.get_value())
             ias = float(iasV.get_value())
+            heading = float(headV.get_value())
             d0 = float(d0V.get_value())
             d1 = float(d1V.get_value())
             dev = float(devV.get_value())
@@ -48,7 +50,7 @@ class WindApp(npyscreen.NPSApp):
 
       windMag = sqrt(d1**2 + deltaDist**2 - 2*d1*deltaDist*cos(radians(dev)))
       direction = degrees(asin( d1 * sin(radians(dev)) / windMag ))
-      direction = globenav.wrap_brg(180 + globenav.wrap_brg(-direction))
+      direction = globenav.wrap_brg(180 + globenav.wrap_brg(-direction) + heading)
 
       windSpeed = windMag/t
 
