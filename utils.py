@@ -248,6 +248,7 @@ def runwayMaterial(txt):
 class globenav:
     # wrap a bearing in degrees to the range 0-359
     def wrap_brg(b):
+        deg = b
         while deg < 0:
             deg = 360+deg
         while deg >= 360:
