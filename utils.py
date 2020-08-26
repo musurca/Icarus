@@ -185,7 +185,10 @@ remarkDict = {  'opns':"operations",
                 "gnd":"ground",
                 "grd":"ground",
                 "unlgtd":"unlighted",
-                "daylt":"daylight"
+                "daylt":"daylight",
+                "tgls":"temporary guidance leaflets",
+                "tgl":"temporary guidance leaflet",
+                "na":"not available"
             }
 
 punctDict = ['/', '.', ';', ',', ' ', ':','(',')']

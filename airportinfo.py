@@ -211,7 +211,6 @@ for runway in runwayList:
 
     rLight = ""
     if runway['lighted'] == '1':
-        #matStr = matStr + " (L)"
         rLight = "(L)"
 
     if len(runway['le_heading_degT']) > 0:
@@ -232,11 +231,9 @@ for runway in runwayList:
     if runway['le_ident'][0:1] == "H":
         rType="Helipad"
         rDesc=runway['le_ident']
-        #print("Helipad " + runway['le_ident'] + " -- " + runway['length_ft'] + " ft" + matStr)
     else:
         rType="Runway"
         rDesc=runway['le_ident'] + leHeadingStr + " ——— " + runway['he_ident'] + heHeadingStr
-        #print("Runway " + runway['le_ident'] + leHeadingStr + " / " + runway['he_ident'] + heHeadingStr  + " -- " + runway['length_ft'] + " ft" + matStr)
     runwayTable.add_row(rType + " " + rDesc, runway['length_ft'] + " ft", rmat, rLight)
 console.print(runwayTable)
 
@@ -254,7 +251,6 @@ if len(nearbyComFreqs) > 0:
     comTable.add_column("Description")
     comTable.add_column("Freq (mHz)")
     for freq in nearbyComFreqs:
-        #print(freq['type'] + "\t" + freq['frequency_mhz'] + " mHz\t(" + freq['description'] + ")")
         comTable.add_row(freq['type'], freq['description'], freq['frequency_mhz'])
     console.print(comTable)
 
