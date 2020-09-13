@@ -288,7 +288,7 @@ class globenav:
 class db:
     # execute a function on each element of a CSV
     def execute(csvFile, executeFunc):
-        with open(DATA_DIR+csvFile, newline='') as csvfile:
+        with open(DATA_DIR+csvFile, newline='', encoding='utf8') as csvfile:
             elements = csv.DictReader(csvfile)
             for element in elements:
                 executeFunc(element)
@@ -296,7 +296,7 @@ class db:
     # return results filtered by a query function, and optionally post-process results
     def query(csvFile, queryFunc, processFunc=None):
         results = []
-        with open(DATA_DIR+csvFile, newline='') as csvfile:
+        with open(DATA_DIR+csvFile, newline='', encoding='utf8') as csvfile:
             elements = csv.DictReader(csvfile)
             for element in elements:
                 res = queryFunc(element)
@@ -308,7 +308,7 @@ class db:
 
     # return first element matching query function
     def findFirst(csvFile, queryFunc):
-        with open(DATA_DIR+csvFile, newline='') as csvfile:
+        with open(DATA_DIR+csvFile, newline='', encoding='utf8') as csvfile:
             elements = csv.DictReader(csvfile)
             for element in elements:
                 if queryFunc(element):

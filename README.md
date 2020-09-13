@@ -89,7 +89,8 @@ How to use:
 ## Dependencies
 * [Python 3](https://www.python.org/downloads/)
 * numpy
-* scipy 
+* scipy
+* requests 
 * wget 
 * BeautifulSoup 4
 * npyscreen 
@@ -99,7 +100,7 @@ How to use:
 
 2) From the command line:
 ```
-pip install numpy scipy wget beautifulsoup4 npyscreen rich
+pip install numpy scipy wget beautifulsoup4 npyscreen rich requests
 ```
 
 ## Acknowledgements
