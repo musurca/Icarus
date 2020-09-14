@@ -15,7 +15,8 @@ from utils import decode_remark
 
 BASE_PATH = "./diagrams"
 
-CHART_SOURCE = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
+CHART_SOURCE        = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
+ALT_CHART_SOURCE    = 'https://vau.aero/navdb/chart/'
 
 if len(sys.argv) > 1:
     airportCode = sys.argv[1].upper()
@@ -48,9 +49,7 @@ for a in chart_soup.find_all('a'):
 def replace_char(s, p, r):
     return s[:p]+r+s[p+1:]
 
-if len(pdfLinks) == 0:
-    print("No diagrams available for this airport.")
-else:
+if len(pdfLinks) != 0:
     # remove old diagrams & remarks
     for file in glob.glob(BASE_PATH + "/" + airportCode + "/*"):
         os.remove(file)
@@ -64,7 +63,7 @@ else:
             fileName = replace_char(fileName,splatIndex,'-')
             splatIndex = fileName.find("/")
         print("\n" + fileName)
-        wget.download(link['url'], BASE_PATH + "/" + airportCode + "/" + fileName + ".PDF")
+        wget.download(link['url'], BASE_PATH + "/" + airportCode + "/" + fileName + ".PDF", headers=headers)
 
 # save decoded airport remarks
 remarks = []
@@ -82,5 +81,14 @@ if len(remarks) > 0:
         outF.write("* " + remark + "\n")
     outF.close()
     print("\nREMARKS")
+
+# Try to scrape the Jeppesen compilation
+jepUrl = ALT_CHART_SOURCE+airportCode+".pdf"
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+jepFile = s.get(jepUrl, headers=headers)
+if jepFile.status_code == 200:
+    open( BASE_PATH + "/" + airportCode + "/" + airportCode + " JEPPESEN.PDF", 'wb').write(jepFile.content)
+elif len(remarks) == 0 and len(pdfLinks) == 0:
+    sys.exit("No diagrams available for this airport.")
 
 print("\nDone! Saved to " + BASE_PATH + "/" + airportCode + ".")
