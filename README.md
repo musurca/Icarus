@@ -1,5 +1,5 @@
 # Icarus
-A suite of CLI tools for use in General Aviation and flight simulation.
+A suite of CLI tools for use in flight simulation for General Aviation.
 
 ![Example](https://github.com/musurca/Icarus/raw/master/images/screen.png)
 
