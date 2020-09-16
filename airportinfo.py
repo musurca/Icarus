@@ -11,7 +11,6 @@ TODO: handle hybrid runway materials (or maybe just get entire list of possibili
 TODO: option for displaying true or magnetic headings (currently magnetic by default)
 
 '''
-import requests
 import sys
 from math import sin, cos, sqrt, atan2, radians, degrees
 
@@ -22,7 +21,7 @@ from rich.markdown import Markdown
 
 from igrf.magvar import Magvar
 
-from utils import db, runwayMaterial, decode_remark, globenav, longestSubstringFinder
+from utils import db, runwayMaterial, decode_remark, globenav, longestSubstringFinder, scrape
 
 CHART_SOURCE        = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
 METAR_SOURCE        = 'https://aviationweather.gov/metar/data?format=raw&date=&hours=0&ids='
@@ -30,8 +29,7 @@ METAR_SOURCE        = 'https://aviationweather.gov/metar/data?format=raw&date=&h
 MV = Magvar()
 console = Console()
 
-s = requests.Session()
-headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+s = scrape.getSession()
 
 def minDist(e):
     return e['dist']
@@ -171,7 +169,7 @@ if len(cityList) > 0:
 
 # QUERY - METAR
 metarTxt = ""
-soup = BeautifulSoup(s.get(METAR_SOURCE + code, headers=headers).text, features="html.parser")
+soup = BeautifulSoup(s.get(METAR_SOURCE + code).text, features="html.parser")
 metarSoup = soup.find_all('code')
 if len(metarSoup) > 0:
     checkMetar = metarSoup[0].get_text().split()
@@ -188,7 +186,7 @@ def attrVal(ele, attr):
     return ""
 
 ilsfreqs = []
-soup = BeautifulSoup(s.get(CHART_SOURCE + code, headers=headers).text, features="html.parser")
+soup = BeautifulSoup(s.get(CHART_SOURCE + code).text, features="html.parser")
 for div in soup.find_all('div'):
     if attrVal(div, 'id') == 'navaids':
         for tr in div.find_all('tr'):

@@ -7,6 +7,8 @@ Shared aviation utility methods.
 import csv
 from math import sin, cos, sqrt, atan2, radians, degrees
 
+import requests
+
 DATA_DIR = "./data/"
 
 # REMARK DECODING / EXPANSION
@@ -245,6 +247,16 @@ def runwayMaterial(txt):
         return "Grass"
     else:
         return ""
+
+# WEB SCRAPING
+class scrape:
+    def getUserAgent():
+        return {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+        
+    def getSession():
+        sesh = requests.Session()
+        sesh.headers.update(scrape.getUserAgent())
+        return sesh
 
 # SPHERICAL NAVIGATION
 

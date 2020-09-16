@@ -4,14 +4,13 @@ diagramscraper.py
 Scrapes the FAA website for all relevant diagrams for a particular airport.
 
 '''
-import requests
 import sys
 import os
 import wget
 import glob
 from bs4 import BeautifulSoup
 
-from utils import decode_remark
+from utils import decode_remark, scrape
 
 BASE_PATH = "./diagrams"
 
@@ -34,7 +33,7 @@ except OSError as error:
     pass
 
 # Find all FAA PDF links
-s = requests.Session() 
+s = scrape.getSession()
 chart_soup = BeautifulSoup(s.get(CHART_SOURCE + airportCode).text, features="html.parser")
 pdfLinks = []
 for a in chart_soup.find_all('a'):
@@ -63,7 +62,10 @@ if len(pdfLinks) != 0:
             fileName = replace_char(fileName,splatIndex,'-')
             splatIndex = fileName.find("/")
         print("\n" + fileName)
-        wget.download(link['url'], BASE_PATH + "/" + airportCode + "/" + fileName + ".PDF", headers=headers)
+        try:
+            wget.download(link['url'], BASE_PATH + "/" + airportCode + "/" + fileName + ".PDF")
+        except:
+            print("<BROKEN LINK>")
 
 # save decoded airport remarks
 remarks = []
@@ -84,8 +86,7 @@ if len(remarks) > 0:
 
 # Try to scrape the Jeppesen compilation
 jepUrl = ALT_CHART_SOURCE+airportCode+".pdf"
-headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-jepFile = s.get(jepUrl, headers=headers)
+jepFile = s.get(jepUrl)
 if jepFile.status_code == 200:
     open( BASE_PATH + "/" + airportCode + "/" + airportCode + " JEPPESEN.PDF", 'wb').write(jepFile.content)
 elif len(remarks) == 0 and len(pdfLinks) == 0:

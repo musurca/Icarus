@@ -7,9 +7,9 @@ TODO: gets weird in Alaska.
 TODO: if you get only 1 FBO, include it
 
 '''
-import requests
 import sys
 from bs4 import BeautifulSoup
+from utils import scrape
 
 def minDist(e):
     return e['dist']
@@ -33,7 +33,7 @@ if len(sys.argv) > 3:
     if sys.argv[3].upper() == "JETA":
         jetFuel = True
 
-s = requests.Session() 
+s = scrape.getSession()
 fbo_soup = BeautifulSoup(s.get('http://www.100ll.com/searchresults.php?clear_previous=true&searchfor=' + airportCode + '&submit.x=0&submit.y=0').text, features="html.parser")
 
 # First, find a valid FBO hash ID near our airport

@@ -61,6 +61,15 @@ Finds the shortest route between two airports using multiple stops, in which the
 
 NOTE: Due to the large number of possible airports to search, this command can be very slow to execute.
 
+### metar
+```
+metar [ICAO code]
+
+ex:
+> metar KLAX
+```
+Finds the current METAR for an airport or weather station.
+
 ### updatedb
 ```
 updatedb
