@@ -192,9 +192,12 @@ for div in soup.find_all('div'):
             tab = tr.find_all('td')
             if len(tab) > 0:
                 if tab[1].string == 'ILS/DME':
-                    rwy = tab[0].string.split()[1]
-                    freq = tab[3].string.split()[0]
-                    ilsfreqs.append({'rwy':rwy, 'freq':freq})
+                    try:
+                        rwy = tab[0].string.split()[1]
+                        freq = tab[3].string.split()[0]
+                        ilsfreqs.append({'rwy':rwy, 'freq':freq})
+                    except:
+                        pass
 
 def ilsByRunway(rwy):
     for ils in ilsfreqs:
