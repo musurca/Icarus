@@ -24,7 +24,7 @@ from igrf.magvar import Magvar
 
 from utils import db, runwayMaterial, decode_remark, globenav, longestSubstringFinder
 
-CHART_SOURCE = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
+CHART_SOURCE        = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
 
 MV = Magvar()
 console = Console()
@@ -184,6 +184,32 @@ if len(cityList) > 0:
 print("")
 
 # QUERY - airport runways
+# first, see if there are published ILS frequencies
+def attrVal(ele, attr):
+    if ele.has_attr(attr):
+        return ele[attr]
+    return ""
+
+ilsfreqs = []
+s = requests.Session()
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+soup = BeautifulSoup(s.get(CHART_SOURCE + code, headers=headers).text, features="html.parser")
+for div in soup.find_all('div'):
+    if attrVal(div, 'id') == 'navaids':
+        for tr in div.find_all('tr'):
+            tab = tr.find_all('td')
+            if len(tab) > 0:
+                if tab[1].string == 'ILS/DME':
+                    rwy = tab[0].string.split()[1]
+                    freq = tab[3].string.split()[0]
+                    ilsfreqs.append({'rwy':rwy, 'freq':freq})
+
+def ilsByRunway(rwy):
+    for ils in ilsfreqs:
+        if ils['rwy'].lower() == rwy.lower():
+            return ils['freq']
+    return ''
+
 def minLength(e):
     return e['length']
 
@@ -197,11 +223,14 @@ def runwayProcess(runway, args):
 runwayList = db.query('runways.csv', openAndMatchesICAO, runwayProcess)
 runwayList.sort(key=minLength)
 
-runwayTable = Table(show_header=False, box=box.MINIMAL)
-runwayTable.add_column("Description", style="bold")
-runwayTable.add_column("Length", justify="right")
+runwayTable = Table(show_header=True, box=box.SIMPLE)
+runwayTable.add_column("Runway", style="bold")
+runwayTable.add_column("Length (ft)", justify="right")
 runwayTable.add_column("Material")
-runwayTable.add_column("Lighted")
+runwayTable.add_column("Lighted", justify="center")
+if len(ilsfreqs) > 0:
+    runwayTable.add_column("LOC/DME Freqs (mHz)")
+    runwayTable.add_column("")
 for runway in runwayList:
     rmat = runwayMaterial(runway['surface'])
     if len(rmat) > 0:
@@ -226,7 +255,6 @@ for runway in runwayList:
         heHeadingStr = " (" + str(int(round(heHeadingDeg))) + "°)"
     else:
         heHeadingStr = ""
-
     
     if runway['le_ident'][0:1] == "H":
         rType="Helipad"
@@ -234,7 +262,13 @@ for runway in runwayList:
     else:
         rType="Runway"
         rDesc=runway['le_ident'] + leHeadingStr + " ——— " + runway['he_ident'] + heHeadingStr
-    runwayTable.add_row(rType + " " + rDesc, runway['length_ft'] + " ft", rmat, rLight)
+    
+    if len(ilsfreqs) > 0:
+        leIls = ilsByRunway(runway['le_ident'])
+        heIls = ilsByRunway(runway['he_ident'])
+        runwayTable.add_row(rType + " " + rDesc, runway['length_ft'], rmat, rLight, leIls, heIls)
+    else:
+        runwayTable.add_row(rType + " " + rDesc, runway['length_ft'], rmat, rLight)
 console.print(runwayTable)
 
 # QUERY -- airport com frequencies
@@ -273,6 +307,24 @@ def navaidPostprocess(navaid, args):
 
 closenavaids = db.query('navaids.csv', isWithinRange, navaidPostprocess)
 closenavaids.sort(key=minDist)
+
+# Find ILS frequencies
+def attrVal(ele, attr):
+    if ele.has_attr(attr):
+        return ele[attr]
+    return ""
+
+ilsfreqs = []
+s = requests.Session()
+soup = BeautifulSoup(s.get(CHART_SOURCE + code).text, features="html.parser")
+for div in soup.find_all('div'):
+    if attrVal(div, 'id') == 'navaids':
+        for tr in div.find_all('tr'):
+            tab = tr.find_all('td')
+            if len(tab) > 0:
+                if tab[1].string == 'ILS/DME':
+                    freq = tab[3].string.split()[0]
+                    ilsfreqs.append({'ident':'ILS', 'name':tab[0].string, 'type':'LOC/DME', 'frequency_khz':freq})
 
 if len(closenavaids) > 0:
     print("")
