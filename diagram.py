@@ -1,5 +1,5 @@
 '''
-diagramscraper.py
+diagram.py
 
 Scrapes the FAA website for all relevant diagrams for a particular airport.
 
@@ -8,7 +8,6 @@ import sys
 import os
 import wget
 import glob
-from bs4 import BeautifulSoup
 
 from utils import decode_remark, scrape
 
@@ -34,7 +33,7 @@ except OSError as error:
 
 # Find all FAA PDF links
 s = scrape.getSession()
-chart_soup = BeautifulSoup(s.get(CHART_SOURCE + airportCode).text, features="html.parser")
+chart_soup = scrape.getSoup(s, CHART_SOURCE + airportCode)
 pdfLinks = []
 for a in chart_soup.find_all('a'):
     if a.has_attr('href'):

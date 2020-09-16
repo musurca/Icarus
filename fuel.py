@@ -1,5 +1,5 @@
 '''
-fuelscraper.py
+fuel.py
 
 Scrapes 100ll.com for avgas prices near an airport.
 
@@ -10,7 +10,6 @@ TODO: convert true headings to magnetic
 '''
 import sys
 
-from bs4 import BeautifulSoup
 from rich.console import Console
 from rich.table import Column, Table, box
 from rich.markdown import Markdown
@@ -42,7 +41,7 @@ if len(sys.argv) > 3:
         jetFuel = True
 
 s = scrape.getSession()
-fbo_soup = BeautifulSoup(s.get('http://www.100ll.com/searchresults.php?clear_previous=true&searchfor=' + airportCode + '&submit.x=0&submit.y=0').text, features="html.parser")
+fbo_soup = scrape.getSoup(s, 'http://www.100ll.com/searchresults.php?clear_previous=true&searchfor=' + airportCode + '&submit.x=0&submit.y=0')
 
 # First, find a valid FBO hash ID near our airport
 scrapeArg = ""
@@ -70,8 +69,7 @@ if jetFuel == True:
     fuelType = "JET-A"
     fuelSearchType = "jeta"
 
-fuel_price_html = s.get('http://www.100ll.com/shownearby' + fuelSearchType + '.php?' + scrapeArg)
-soup = BeautifulSoup(fuel_price_html.text, features="html.parser")
+soup = scrape.getSoup(s, 'http://www.100ll.com/shownearby' + fuelSearchType + '.php?' + scrapeArg)
 fboTable=[]
 for tr in soup.find_all('tr'):
     if tr.has_attr('id'):

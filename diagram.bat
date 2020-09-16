@@ -1,2 +1,2 @@
 @echo off
-python3 diagramscraper.py %1
+python3 diagram.py %1

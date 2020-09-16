@@ -8,6 +8,7 @@ import csv
 from math import sin, cos, sqrt, atan2, radians, degrees
 
 import requests
+from bs4 import BeautifulSoup
 
 DATA_DIR = "./data/"
 
@@ -252,11 +253,14 @@ def runwayMaterial(txt):
 class scrape:
     def getUserAgent():
         return {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-        
+
     def getSession():
         sesh = requests.Session()
         sesh.headers.update(scrape.getUserAgent())
         return sesh
+
+    def getSoup(sesh, url):
+        return BeautifulSoup(sesh.get(url).text, features="html.parser")
 
 # SPHERICAL NAVIGATION
 

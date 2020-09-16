@@ -14,7 +14,6 @@ TODO: option for displaying true or magnetic headings (currently magnetic by def
 import sys
 from math import sin, cos, sqrt, atan2, radians, degrees
 
-from bs4 import BeautifulSoup
 from rich.console import Console
 from rich.table import Column, Table, box
 from rich.markdown import Markdown
@@ -169,7 +168,7 @@ if len(cityList) > 0:
 
 # QUERY - METAR
 metarTxt = ""
-soup = BeautifulSoup(s.get(METAR_SOURCE + code).text, features="html.parser")
+soup = scrape.getSoup(s, METAR_SOURCE + code)
 metarSoup = soup.find_all('code')
 if len(metarSoup) > 0:
     checkMetar = metarSoup[0].get_text().split()
@@ -186,7 +185,7 @@ def attrVal(ele, attr):
     return ""
 
 ilsfreqs = []
-soup = BeautifulSoup(s.get(CHART_SOURCE + code).text, features="html.parser")
+soup = scrape.getSoup(s, CHART_SOURCE + code)
 for div in soup.find_all('div'):
     if attrVal(div, 'id') == 'navaids':
         for tr in div.find_all('tr'):
