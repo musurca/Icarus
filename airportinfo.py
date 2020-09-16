@@ -25,9 +25,13 @@ from igrf.magvar import Magvar
 from utils import db, runwayMaterial, decode_remark, globenav, longestSubstringFinder
 
 CHART_SOURCE        = 'https://nfdc.faa.gov/nfdcApps/services/ajv5/airportDisplay.jsp?airportId='
+METAR_SOURCE        = 'https://aviationweather.gov/metar/data?format=raw&date=&hours=0&ids='
 
 MV = Magvar()
 console = Console()
+
+s = requests.Session()
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
 
 def minDist(e):
     return e['dist']
@@ -135,26 +139,10 @@ if airport != None:
 else:
     sys.exit("Can't find airport " + code + "!")
 
+# Settle on a final airport code
 code = airport['ident']
 
-print("")
-console.print(Markdown("# "+apName + " (" + code + ")"))
-if apLat >= 0:
-    latDir = "°N"
-else:
-    latDir = "°S"
-if apLong >= 0:
-    longDir = "°E"
-else:
-    longDir = "°W"
-latText = str(round(abs(apLat),6)) + latDir
-longText = str(round(abs(apLong),6)) + longDir
-if apMagVar < 0:
-    magVarDir = "W"
-else:
-    magVarDir = "E"
-console.print(Markdown("### *" + latText + ", " + longText + " / " + apElev + " ft ASL*"))
-console.print(Markdown("### *Magnetic declination: " + str(round(apMagVar,1)) + "° (" + magVarDir + ")*"))
+# --- QUERY DATA ---
 
 # QUERY - find closest city within 20nm
 def isCityWithin20NM(city):
@@ -180,8 +168,17 @@ if len(cityList) > 0:
     else:
         cityList.sort(key=minPopulation)
         city = cityList[len(cityList)-1]
-    console.print(Markdown("### *Closest city: " + city['city_ascii'] + ", " + city['state_id'] + " (" + str(round(city['dist'],1)) + "nm)*"))   
-print("")
+
+# QUERY - METAR
+metarTxt = ""
+soup = BeautifulSoup(s.get(METAR_SOURCE + code, headers=headers).text, features="html.parser")
+metarSoup = soup.find_all('code')
+if len(metarSoup) > 0:
+    checkMetar = metarSoup[0].get_text().split()
+    if checkMetar[0] == code:
+        for i in range(len(checkMetar)):
+            if i != 0:
+                metarTxt = metarTxt + checkMetar[i] + " "
 
 # QUERY - airport runways
 # first, see if there are published ILS frequencies
@@ -191,8 +188,6 @@ def attrVal(ele, attr):
     return ""
 
 ilsfreqs = []
-s = requests.Session()
-headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
 soup = BeautifulSoup(s.get(CHART_SOURCE + code, headers=headers).text, features="html.parser")
 for div in soup.find_all('div'):
     if attrVal(div, 'id') == 'navaids':
@@ -223,6 +218,76 @@ def runwayProcess(runway, args):
 runwayList = db.query('runways.csv', openAndMatchesICAO, runwayProcess)
 runwayList.sort(key=minLength)
 
+# QUERY -- airport com frequencies
+def matchesICAOCode(freq):
+    return freq['airport_ident'] == code,
+
+nearbyComFreqs = db.query('airport-frequencies.csv', matchesICAOCode)
+
+# QUERY --  5 closest navaids to airport within 30nm
+# filter by navaids within 50 nm
+def isWithinRange(navaid):
+    navLat = float(navaid['latitude_deg'])
+    navLong = float(navaid['longitude_deg'])
+    dist = globenav.dist_coord(apLat, apLong, navLat, navLong)
+    return (dist<=50, dist, navLat, navLong)
+
+# save distance and radial to airport
+def navaidPostprocess(navaid, args):
+    dist, navLat, navLong = args
+    navaid['dist'] = dist
+    navMagVar = MV.declination(navLat, navLong,0)
+    brg = globenav.wrap_brg(globenav.brg_coord(navLat, navLong, apLat, apLong) - navMagVar)
+    navaid['radial'] = str(int(round(brg)))
+
+closenavaids = db.query('navaids.csv', isWithinRange, navaidPostprocess)
+closenavaids.sort(key=minDist)
+
+# QUERY - other airports within 20nm
+def airportFilter(airport):
+    ident = airport['ident']
+    aLat = float(airport['latitude_deg'])
+    aLong = float(airport['longitude_deg'])
+    dist = globenav.dist_coord(apLat, apLong, aLat, aLong)
+    return (ident != code and dist <= 20 and (showHelipads or airport['type'].find("airport") != -1), dist)
+
+def airportProcess(airport, args):
+    airport['dist'] = args[0]
+
+nearbyAirports = db.query('airports.csv', airportFilter, airportProcess)
+nearbyAirports.sort(key=minDist)
+
+# --- PRINT DATA ---
+
+# PRINT - Header
+print("")
+console.print(Markdown("# "+apName + " (" + code + ")"))
+if apLat >= 0:
+    latDir = "°N"
+else:
+    latDir = "°S"
+if apLong >= 0:
+    longDir = "°E"
+else:
+    longDir = "°W"
+latText = str(round(abs(apLat),6)) + latDir
+longText = str(round(abs(apLong),6)) + longDir
+if apMagVar < 0:
+    magVarDir = "W"
+else:
+    magVarDir = "E"
+console.print(Markdown("### *" + latText + ", " + longText + " / " + apElev + " ft ASL*"))
+console.print(Markdown("### *Magnetic declination: " + str(round(apMagVar,1)) + "° (" + magVarDir + ")*"))
+
+if len(cityList) > 0:
+    console.print(Markdown("### *Closest city: " + city['city_ascii'] + ", " + city['state_id'] + " (" + str(round(city['dist'],1)) + "nm)*"))   
+print("")
+
+# PRINT - METAR
+if len(metarTxt) > 0:
+    console.print(Markdown("### " + metarTxt))
+
+# PRINT - runways
 runwayTable = Table(show_header=True, box=box.SIMPLE)
 runwayTable.add_column("Runway", style="bold")
 runwayTable.add_column("Length (ft)", justify="right")
@@ -273,12 +338,7 @@ for runway in runwayList:
         runwayTable.add_row(rType + " " + rDesc, runway['length_ft'], rmat, rLight)
 console.print(runwayTable)
 
-# QUERY -- airport com frequencies
-def matchesICAOCode(freq):
-    return freq['airport_ident'] == code,
-
-nearbyComFreqs = db.query('airport-frequencies.csv', matchesICAOCode)
-
+# PRINT - com freqs
 if len(nearbyComFreqs) > 0:
     print("")
     console.print(Markdown("### COMS"))
@@ -290,44 +350,7 @@ if len(nearbyComFreqs) > 0:
         comTable.add_row(freq['type'], freq['description'], freq['frequency_mhz'])
     console.print(comTable)
 
-# QUERY --  5 closest navaids to airport within 30nm
-
-# filter by navaids within 50 nm
-def isWithinRange(navaid):
-    navLat = float(navaid['latitude_deg'])
-    navLong = float(navaid['longitude_deg'])
-    dist = globenav.dist_coord(apLat, apLong, navLat, navLong)
-    return (dist<=50, dist, navLat, navLong)
-
-# save distance and radial to airport
-def navaidPostprocess(navaid, args):
-    dist, navLat, navLong = args
-    navaid['dist'] = dist
-    navMagVar = MV.declination(navLat, navLong,0)
-    brg = globenav.wrap_brg(globenav.brg_coord(navLat, navLong, apLat, apLong) - navMagVar)
-    navaid['radial'] = str(int(round(brg)))
-
-closenavaids = db.query('navaids.csv', isWithinRange, navaidPostprocess)
-closenavaids.sort(key=minDist)
-
-# Find ILS frequencies
-def attrVal(ele, attr):
-    if ele.has_attr(attr):
-        return ele[attr]
-    return ""
-
-ilsfreqs = []
-s = requests.Session()
-soup = BeautifulSoup(s.get(CHART_SOURCE + code).text, features="html.parser")
-for div in soup.find_all('div'):
-    if attrVal(div, 'id') == 'navaids':
-        for tr in div.find_all('tr'):
-            tab = tr.find_all('td')
-            if len(tab) > 0:
-                if tab[1].string == 'ILS/DME':
-                    freq = tab[3].string.split()[0]
-                    ilsfreqs.append({'ident':'ILS', 'name':tab[0].string, 'type':'LOC/DME', 'frequency_khz':freq})
-
+# PRINT - navaids
 if len(closenavaids) > 0:
     print("")
     console.print(Markdown("### NAVAIDS"))
@@ -350,26 +373,13 @@ if len(closenavaids) > 0:
         naTable.add_row(navaid['ident'], navaid['name'], navaid['type'], str(round(navaid['dist'],1)) + " nm", navaid['radial']+"°", freq)
     console.print(naTable)
 
-# QUERY - other airports within 20nm
-def airportFilter(airport):
-    ident = airport['ident']
-    aLat = float(airport['latitude_deg'])
-    aLong = float(airport['longitude_deg'])
-    dist = globenav.dist_coord(apLat, apLong, aLat, aLong)
-    return (ident != code and dist <= 20 and (showHelipads or airport['type'].find("airport") != -1), dist)
-
-def airportProcess(airport, args):
-    airport['dist'] = args[0]
-
-nearbyAirports = db.query('airports.csv', airportFilter, airportProcess)
-nearbyAirports.sort(key=minDist)
-
+# PRINT - nearby airports
 if len(nearbyAirports) > 0:
     print("")
     codeString = nearbyAirports[0]['ident']
     for k in range(len(nearbyAirports)-1):
         codeString = codeString + " " + nearbyAirports[k+1]['ident']
-    console.print("[b]Within 20nm:[/b]")
+    console.print("[b]Airports within 20nm:[/b]")
     print(codeString)
 
 print("")
