@@ -266,6 +266,8 @@ for runway in runwayList:
     if len(ilsfreqs) > 0:
         leIls = ilsByRunway(runway['le_ident'])
         heIls = ilsByRunway(runway['he_ident'])
+        if leIls == heIls:
+            heIls = ''
         runwayTable.add_row(rType + " " + rDesc, runway['length_ft'], rmat, rLight, leIls, heIls)
     else:
         runwayTable.add_row(rType + " " + rDesc, runway['length_ft'], rmat, rLight)
