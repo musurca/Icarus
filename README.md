@@ -119,8 +119,8 @@ How to use:
 * [rich](https://github.com/willmcgugan/rich)
 
 ## Acknowledgements
-Airport/navaid data courtesy of [OurAirports](http://ourairports.com).
-U.S. city data courtesy of [SimpleMaps](https://simplemaps.com/data/us-cities).
-METAR data scraped from the [Aviation Weather Center](https://aviationweather.gov/).
-Fuel prices scraped from [100LL.com - Aviation Fuel Price Search](http://www.100ll.com).
-Some code based on the MIT-licensed [pyIGRF](https://github.com/zzyztyy/pyIGRF).
+* Airport/navaid data courtesy of [OurAirports](http://ourairports.com).
+* U.S. city data courtesy of [SimpleMaps](https://simplemaps.com/data/us-cities).
+* METAR data scraped from the [Aviation Weather Center](https://aviationweather.gov/).
+* Fuel prices scraped from [100LL.com - Aviation Fuel Price Search](http://www.100ll.com).
+* Some code based on the MIT-licensed [pyIGRF](https://github.com/zzyztyy/pyIGRF).
