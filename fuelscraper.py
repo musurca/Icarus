@@ -5,11 +5,19 @@ Scrapes 100ll.com for avgas prices near an airport.
 
 TODO: gets weird in Alaska. 
 TODO: if you get only 1 FBO, include it
+TODO: convert true headings to magnetic
 
 '''
 import sys
+
 from bs4 import BeautifulSoup
+from rich.console import Console
+from rich.table import Column, Table, box
+from rich.markdown import Markdown
+
 from utils import scrape
+
+console = Console()
 
 def minDist(e):
     return e['dist']
@@ -21,7 +29,7 @@ if len(sys.argv) > 1:
 else:
     sys.exit("You must provide an airport ICAO code!")
 
-maxDist = 999
+maxDist = 30
 if len(sys.argv) > 2:
     if sys.argv[2].isnumeric():
         maxDist = int(sys.argv[2])
@@ -82,17 +90,27 @@ if len(fboTable) == 0:
 fboTable.sort(key=minDist)
 
 print("")
-print("\t\t\t" + fuelType + " PRICES @ " + airportCode)
-print("---------------------------------------------------------------------")
-print("\tSELF\tFULL\t\t\tFBO")
+console.print(Markdown("### " + fuelType + " PRICES @ " + airportCode))
+localFuelTable = Table(show_header=True, box=box.SIMPLE)
+localFuelTable.add_column("Self")
+localFuelTable.add_column("Full")
+localFuelTable.add_column("FBO")
 for fbo in fboTable:
     if fbo['airport'] == airportCode or fbo['dist'] == 0:
-        print("\t" + fbo['self'] + "\t" + fbo['full'] + "\t\t\t" + fbo['fbo_name'])
+        localFuelTable.add_row(fbo['self'],fbo['full'],fbo['fbo_name'])
+console.print(localFuelTable)
 
-print("\n\n\t\t\t" + fuelType + " PRICES NEARBY")
-print("---------------------------------------------------------------------")
-print("IDENT\tSELF\tFULL\tDIST\tDIRECT\tFBO")
+print("")
+console.print(Markdown("### " + fuelType + " PRICES NEARBY"))
+fuelTable = Table(show_header=True, box=box.SIMPLE)
+fuelTable.add_column("ID")
+fuelTable.add_column("Self")
+fuelTable.add_column("Full")
+fuelTable.add_column("Distance")
+fuelTable.add_column("Direction")
+fuelTable.add_column("FBO")
 for fbo in fboTable:
     if fbo['airport'] != airportCode and fbo['dist'] <= maxDist:
-        print(fbo['airport'] + "\t" + fbo['self'] + "\t" + fbo['full'] + "\t" + str(fbo['dist']) + " nm \t" + fbo['direction'] + "\t" + fbo['fbo_name'])
+        fuelTable.add_row(fbo['airport'],fbo['self'],fbo['full'],str(fbo['dist']) + " nm",fbo['direction'],fbo['fbo_name'])
+console.print(fuelTable)
 print("")
