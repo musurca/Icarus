@@ -13,6 +13,7 @@ ex:
 ```
 Displays useful information about an airport, including:
 * latitude / longitude and altitude
+* current METAR
 * nearest city
 * runway length, orientation, material, and suitability for night operations
 * published LOC/DME frequencies
