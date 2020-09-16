@@ -3,7 +3,18 @@ A suite of CLI tools for use in flight simulation.
 
 ![Example](https://github.com/musurca/Icarus/raw/master/images/screen.png)
 
-## Tools
+## How to Install
+
+1) [Download and install latest release of Python 3.](https://www.python.org/downloads/)
+
+2) From the command line:
+```
+pip install numpy scipy wget beautifulsoup4 npyscreen rich requests
+```
+
+3) Download latest [Icarus repo](https://github.com/musurca/Icarus/archive/master.zip) and unzip to directory of your choice.
+
+## The Tools
 ### airportinfo
 ```
 airportinfo [ICAO]
@@ -96,17 +107,6 @@ How to use:
 2) Record distance to reference point, start a timer, and wait for X seconds. Longer time intervals will produce more accurate results. An interval of 300-600 seconds (5-10 minutes) is ideal.
 3) After X seconds, record the new distance to the reference point as well as its deviation from its original bearing to your plane in degrees. Use negative degrees if the reference point has slipped to the left, and positive degrees if it has slipped to the right.
 4) Enter your recorded data into the wind program to estimate wind speed and direction.
-
-## How to Install
-
-1) [Download and install latest release of Python 3.](https://www.python.org/downloads/)
-
-2) From the command line:
-```
-pip install numpy scipy wget beautifulsoup4 npyscreen rich requests
-```
-
-3) Download latest [Icarus repo](https://github.com/musurca/Icarus/archive/master.zip) and unzip to directory of your choice.
 
 ## Dependencies
 * [Python 3](https://www.python.org/downloads/)
