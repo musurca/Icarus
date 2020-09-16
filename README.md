@@ -97,6 +97,17 @@ How to use:
 3) After X seconds, record the new distance to the reference point as well as its deviation from its original bearing to your plane in degrees. Use negative degrees if the reference point has slipped to the left, and positive degrees if it has slipped to the right.
 4) Enter your recorded data into the wind program to estimate wind speed and direction.
 
+## How to Install
+
+1) [Download and install latest release of Python 3.](https://www.python.org/downloads/)
+
+2) From the command line:
+```
+pip install numpy scipy wget beautifulsoup4 npyscreen rich requests
+```
+
+3) Download latest [Icarus repo](https://github.com/musurca/Icarus/archive/master.zip) and unzip to directory of your choice.
+
 ## Dependencies
 * [Python 3](https://www.python.org/downloads/)
 * numpy
@@ -106,13 +117,6 @@ How to use:
 * BeautifulSoup 4
 * npyscreen 
 * [rich](https://github.com/willmcgugan/rich)
-
-1) [Download and install latest release of Python 3.](https://www.python.org/downloads/)
-
-2) From the command line:
-```
-pip install numpy scipy wget beautifulsoup4 npyscreen rich requests
-```
 
 ## Acknowledgements
 Airport/navaid data courtesy of [OurAirports](http://ourairports.com).
