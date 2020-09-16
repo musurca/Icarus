@@ -11,7 +11,7 @@ A suite of CLI tools for use in flight simulation.
 
 3) From the command line, change to your Icarus directory and run ```install``` to download the Icarus dependencies. 
 
-*(If you'd rather do this manually, you can instead run ```pip install numpy scipy wget beautifulsoup4 npyscreen rich requests```.)*
+*(If you'd rather do the last step manually, you can instead run* ```pip install numpy scipy wget beautifulsoup4 npyscreen rich requests```*.)*
 
 You're ready to use Icarus!
 
