@@ -15,6 +15,7 @@ Displays useful information about an airport, including:
 * latitude / longitude and altitude
 * nearest city
 * runway length, orientation, material, and suitability for night operations
+* published LOC/DME frequencies
 * relevant radio frequencies
 * nearby navaids
 * nearby airports
@@ -28,7 +29,7 @@ diagram [ICAO]
 ex: 
 > diagram KJFK
 ```
-Connects to the FAA database and downloads all available airport diagrams (PDF), approach/departure charts (PDF), and current remarks (TXT) to ./diagrams/[ICAO]. Remarks are also decoded/expanded where possible.
+Connects to the FAA database and downloads all available airport diagrams (PDF), approach/departure charts (PDF), and current remarks (TXT) to ./diagrams/[ICAO]. Remarks are also decoded/expanded where possible. If unable to find any current FAA charts, will scrape the web for any available Jeppesen charts.
 
 ### distance
 ```
