@@ -277,7 +277,7 @@ console.print(Markdown("### *" + latText + ", " + longText + " / " + apElev + " 
 console.print(Markdown("### *Magnetic declination: " + str(round(apMagVar,1)) + "° (" + magVarDir + ")*"))
 
 if len(cityList) > 0:
-    console.print(Markdown("### *Closest city: " + city['city_ascii'] + ", " + city['state_id'] + " (" + str(round(city['dist'],1)) + "nm)*"))   
+    console.print(Markdown("### *Closest city: " + city['city_ascii'] + ", " + city['state_id'] + " (" + str(round(city['dist'],1)) + " nm)*"))   
 print("")
 
 # PRINT - METAR

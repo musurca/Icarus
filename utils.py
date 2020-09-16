@@ -224,30 +224,27 @@ def decode_remark(rtext):
 
 
 # RUNWAY MATERIAL DECODING
+_runwayMats = [ [["CON"],           "Concrete"],
+                [["ASP"],           "Asphalt"],
+                [["TUR"],           "Astroturf"],
+                [["GRV", "GRAV"],   "Gravel"],
+                [["SAND"],          "Sand"],
+                [["WAT"],           "Water"],
+                [["MAT"],           "Mat"],
+                [["GRASS"],         "Grass"] ]
 
 def runwayMaterial(txt):
-    # no common vocab for this so we have to be a bit flexible
     surf = txt.upper()
-    if surf.find("CON") != -1:
-        return "Concrete"
-    elif surf.find("ASP") != -1:
-        return "Asphalt"
-    elif surf.find("TUR") != -1:
-        return "Astroturf"
-    elif surf.find("DIRT") != -1:
-        return "Dirt"
-    elif surf.find("GRV") != -1 or surf.find("GRAV") != -1:
-        return "Gravel"
-    elif surf.find("SAND") != -1:
-        return "Sand"
-    elif surf.find("WAT") != -1:
-        return "Water"
-    elif surf.find("MAT") != -1:
-        return "Mat"
-    elif surf.find("GRASS") != -1:
-        return "Grass"
-    else:
-        return ""
+
+    # no common vocab for this so we have to be a bit flexible
+    for matPair in _runwayMats:
+        abbrevs = matPair[0]
+        material = matPair[1]
+        for abv in abbrevs:
+            if surf.find(abv) != -1:
+                return material
+    
+    return ""
 
 # WEB SCRAPING
 class scrape:
