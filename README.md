@@ -5,14 +5,13 @@ A suite of CLI tools for use in flight simulation.
 
 ## How to Install
 
-1) [Download and install latest release of Python 3.](https://www.python.org/downloads/)
+1) [Download and install the latest release of Python 3.](https://www.python.org/downloads/)
 
-2) From the command line:
-```
-pip install numpy scipy wget beautifulsoup4 npyscreen rich requests
-```
+2) Download the [latest release of Icarus](https://github.com/musurca/Icarus/releases/latest) and unzip it to a directory of your choice, e.g. ```~/icarus```.
 
-3) Download latest [Icarus repo](https://github.com/musurca/Icarus/archive/master.zip) and unzip to directory of your choice.
+3) From the command line, change to your Icarus directory and run ```install``` to download the Icarus dependencies. (If you'd rather do this manually, you can instead run ```pip install numpy scipy wget beautifulsoup4 npyscreen rich requests```.)
+
+You're ready to use Icarus!
 
 ## The Tools
 ### airportinfo
