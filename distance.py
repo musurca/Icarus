@@ -79,12 +79,10 @@ def distance(a,b):
     bLon = float(b['longitude_deg'])
     return globenav.dist_coord(aLat, aLon, bLat, bLon)
 
-def minDist(e):
-    return e['dist']
-
 for dest in possibleDests:
     dest['dist'] = distance(refSource,dest)
-possibleDests.sort(key=minDist)
+# sort by smallest -> largest distance and select smallest
+possibleDests.sort(key=lambda e:e['dist'])
 refDest = possibleDests[0]
 
 srcLat = float(refSource['latitude_deg'])
