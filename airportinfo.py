@@ -47,25 +47,19 @@ if len(sys.argv) > 2:
 airport = None
 
 # check updated list of airports
-def airportMatchesICAO(airport):
-    return airport['ident'] == code
-
-mod_airport = db.findFirst('airports.csv', airportMatchesICAO)
+mod_airport = db.findFirst('airports.csv', lambda a: a['ident'] == code)
 
 # check archaic FSX/FSE list of airports
-def fseAirportMatchesICAO(airport):
-    return airport['icao'] == code
-
-fse_airport = db.findFirst('fse/icaodata.csv', fseAirportMatchesICAO)
+fse_airport = db.findFirst('fse/icaodata.csv', lambda a: a['icao'] == code)
 
 def closestModernAirports(airport):
-        lat = float(airport['latitude_deg'])
-        lon = float(airport['longitude_deg'])
-        dist = globenav.dist_coord(fseLat, fseLong, lat, lon)
-        return dist <= 100, dist
+    lat = float(airport['latitude_deg'])
+    lon = float(airport['longitude_deg'])
+    dist = globenav.dist_coord(fseLat, fseLong, lat, lon)
+    return dist <= 100, dist
 
 def closestProcess(airport, args):
-        airport['dist'] = args[0]
+    airport['dist'] = args[0]
 
 if mod_airport != None:    
     if fse_airport != None:
@@ -92,10 +86,8 @@ if mod_airport != None:
                 for airport in curFseAirports:
                     substr = longestSubstringFinder(airport['name'], fse_airport['name'])
                     airport['nameMatchLen'] = len(substr)
-                
-                def minSublen(e):
-                    return e['nameMatchLen']
-                curFseAirports.sort(key=minSublen)
+
+                curFseAirports.sort(key=lambda e:e['nameMatchLen'])
 
                 curFseAirport = curFseAirports[len(curFseAirports)-1]
 
@@ -153,9 +145,6 @@ def cityProcess(city, args):
 
 cityList = db.query('/cities/uscities.csv', isCityWithin20NM, cityProcess)
 
-def minPopulation(e):
-    return float(e['population'])
-
 # choose city at shortest distance if a small airport or heliport, 
 # or with largest population if it's medium/large
 if len(cityList) > 0:
@@ -163,7 +152,8 @@ if len(cityList) > 0:
         cityList.sort(key=minDist)
         city = cityList[0]
     else:
-        cityList.sort(key=minPopulation)
+        # sort smallest -> largest city population and pick largest
+        cityList.sort(key=lambda e:float(e['population']))
         city = cityList[len(cityList)-1]
 
 # QUERY - METAR
@@ -172,10 +162,13 @@ soup = scrape.getSoup(s, METAR_SOURCE + code)
 metarSoup = soup.find_all('code')
 if len(metarSoup) > 0:
     checkMetar = metarSoup[0].get_text().split()
-    if checkMetar[0] == code:
-        for i in range(len(checkMetar)):
-            if i != 0:
-                metarTxt = metarTxt + checkMetar[i] + " "
+    try:
+        if checkMetar[0] == code:
+            for i in range(len(checkMetar)):
+                if i != 0:
+                    metarTxt = metarTxt + checkMetar[i] + " "
+    except:
+        pass # bad metar, skip it
 
 # QUERY - airport runways
 # first, see if there are published ILS frequencies
@@ -205,24 +198,14 @@ def ilsByRunway(rwy):
             return ils['freq']
     return ''
 
-def minLength(e):
-    return e['length']
-
-def openAndMatchesICAO(runway):
-    refId = runway['airport_ident']
-    return refId == code and runway['closed'] == "0",
-
 def runwayProcess(runway, args):
     runway['length'] = int(runway['length_ft'])
 
-runwayList = db.query('runways.csv', openAndMatchesICAO, runwayProcess)
-runwayList.sort(key=minLength)
+runwayList = db.query('runways.csv', lambda r:(r['airport_ident'] == code and r['closed'] == "0",), runwayProcess)
+runwayList.sort(key=lambda e:e['length'])
 
 # QUERY -- airport com frequencies
-def matchesICAOCode(freq):
-    return freq['airport_ident'] == code,
-
-nearbyComFreqs = db.query('airport-frequencies.csv', matchesICAOCode)
+nearbyComFreqs = db.query('airport-frequencies.csv', lambda f:(f['airport_ident'] == code,))
 
 # QUERY --  5 closest navaids to airport within 30nm
 # filter by navaids within 50 nm
