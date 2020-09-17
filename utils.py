@@ -328,6 +328,10 @@ class db:
                     return element
         return None
 
+    # commonly used sort key on the 'dist' field
+    def sortKeyMinDist(e):
+        return e['dist']
+
 # SUBSTRING MATCHING
 
 def longestSubstringFinder(string1, string2):

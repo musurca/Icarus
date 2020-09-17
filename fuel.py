@@ -14,12 +14,9 @@ from rich.console import Console
 from rich.table import Column, Table, box
 from rich.markdown import Markdown
 
-from utils import scrape
+from utils import scrape, db
 
 console = Console()
-
-def minDist(e):
-    return e['dist']
 
 if len(sys.argv) > 1:
     airportCode = sys.argv[1].upper()
@@ -85,7 +82,7 @@ if len(fboTable) == 0:
     sys.exit("No fuel sources found near " + airportCode + ".")
 
 # sort FBOs by distance from airport
-fboTable.sort(key=minDist)
+fboTable.sort(key=db.sortKeyMinDist)
 
 print("")
 console.print(Markdown("### " + fuelType + " PRICES @ " + airportCode))

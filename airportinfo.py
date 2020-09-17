@@ -30,9 +30,6 @@ console = Console()
 
 s = scrape.getSession()
 
-def minDist(e):
-    return e['dist']
-
 if len(sys.argv) > 1:
     code = sys.argv[1].upper()
 else:
@@ -77,7 +74,7 @@ if mod_airport != None:
             fseLong = float(fse_airport['lon'])
 
             curFseAirports = db.query('airports.csv', closestModernAirports, closestProcess)
-            curFseAirports.sort(key=minDist)
+            curFseAirports.sort(key=db.sortKeyMinDist)
 
             if len(curFseAirports) == 0:
                 # We can't solve this, so err on the side of the modern airport
@@ -110,7 +107,7 @@ else:
         fseLong = float(fse_airport['lon'])
 
         mod_airports = db.query('airports.csv', closestModernAirports, closestProcess)
-        mod_airports.sort(key=minDist)
+        mod_airports.sort(key=db.sortKeyMinDist)
 
         if len(mod_airports) > 0:
             airport = mod_airports[0]
@@ -149,7 +146,7 @@ cityList = db.query('/cities/uscities.csv', isCityWithin20NM, cityProcess)
 # or with largest population if it's medium/large
 if len(cityList) > 0:
     if apType.find("small") != -1 or apType.find("heli") != -1:
-        cityList.sort(key=minDist)
+        cityList.sort(key=db.sortKeyMinDist)
         city = cityList[0]
     else:
         # sort smallest -> largest city population and pick largest
@@ -224,7 +221,7 @@ def navaidPostprocess(navaid, args):
     navaid['radial'] = str(int(round(brg)))
 
 closenavaids = db.query('navaids.csv', isWithinRange, navaidPostprocess)
-closenavaids.sort(key=minDist)
+closenavaids.sort(key=db.sortKeyMinDist)
 
 # QUERY - other airports within 20nm
 def airportFilter(airport):
@@ -238,7 +235,7 @@ def airportProcess(airport, args):
     airport['dist'] = args[0]
 
 nearbyAirports = db.query('airports.csv', airportFilter, airportProcess)
-nearbyAirports.sort(key=minDist)
+nearbyAirports.sort(key=db.sortKeyMinDist)
 
 # --- PRINT DATA ---
 
