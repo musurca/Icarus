@@ -24,7 +24,7 @@ else:
     sys.exit("You must provide an ICAO code!")
 
 metarTxt = ""
-soup = BeautifulSoup(s.get(METAR_SOURCE + code).text, features="html.parser")
+soup = scrape.getSoup(s, METAR_SOURCE + code)
 metarSoup = soup.find_all('code')
 if len(metarSoup) > 0:
     checkMetar = metarSoup[0].get_text().split()
