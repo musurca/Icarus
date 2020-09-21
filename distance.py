@@ -82,7 +82,7 @@ def distance(a,b):
 for dest in possibleDests:
     dest['dist'] = distance(refSource,dest)
 # sort by smallest -> largest distance and select smallest
-possibleDests.sort(key=lambda e:e['dist'])
+possibleDests.sort(key=db.sortKeyMinDist)
 refDest = possibleDests[0]
 
 srcLat = float(refSource['latitude_deg'])
