@@ -263,10 +263,6 @@ if len(cityList) > 0:
     console.print(Markdown("### *Closest city: " + city['city_ascii'] + ", " + city['state_id'] + " (" + str(round(city['dist'],1)) + " nm)*"))   
 print("")
 
-# PRINT - METAR
-if len(metarTxt) > 0:
-    console.print(Markdown("### " + metarTxt))
-
 # PRINT - runways
 runwayTable = Table(show_header=True, box=box.SIMPLE)
 runwayTable.add_column("Runway", style="bold")
@@ -274,8 +270,7 @@ runwayTable.add_column("Length (ft)", justify="right")
 runwayTable.add_column("Material")
 runwayTable.add_column("Lighted", justify="center")
 if len(ilsfreqs) > 0:
-    runwayTable.add_column("LOC/DME Freqs (mHz)")
-    runwayTable.add_column("")
+    runwayTable.add_column("LOC/DME (mHz)")
 for runway in runwayList:
     rmat = runwayMaterial(runway['surface'])
     if len(rmat) > 0:
@@ -303,19 +298,17 @@ for runway in runwayList:
     
     if runway['le_ident'][0:1] == "H":
         rType="Helipad"
-        rDesc=runway['le_ident']
     else:
         rType="Runway"
-        rDesc=runway['le_ident'] + leHeadingStr + " ——— " + runway['he_ident'] + heHeadingStr
-    
-    if len(ilsfreqs) > 0:
-        leIls = ilsByRunway(runway['le_ident'])
-        heIls = ilsByRunway(runway['he_ident'])
-        if leIls == heIls:
-            heIls = ''
-        runwayTable.add_row(rType + " " + rDesc, runway['length_ft'], rmat, rLight, leIls, heIls)
+
+    if rType=="Helipad":
+        runwayTable.add_row(rType + " " + runway['le_ident'], runway['length_ft'], rmat, rLight)
+    elif len(ilsfreqs) > 0:
+        runwayTable.add_row(rType + " " + runway['le_ident'] + leHeadingStr, runway['length_ft'], rmat, rLight, ilsByRunway(runway['le_ident']))
+        runwayTable.add_row(rType + " " + runway['he_ident'] + heHeadingStr, runway['length_ft'], rmat, rLight, ilsByRunway(runway['he_ident']))
     else:
-        runwayTable.add_row(rType + " " + rDesc, runway['length_ft'], rmat, rLight)
+        runwayTable.add_row(rType + " " + runway['le_ident'] + leHeadingStr, runway['length_ft'], rmat, rLight)
+        runwayTable.add_row(rType + " " + runway['he_ident'] + heHeadingStr, runway['length_ft'], rmat, rLight)
 console.print(runwayTable)
 
 # PRINT - com freqs
@@ -362,4 +355,12 @@ if len(nearbyAirports) > 0:
     console.print("[b]Airports within 20nm:[/b]")
     print(codeString)
 
+# PRINT - METAR
+if len(metarTxt) > 0:
+    print("")
+    console.print("[b]Current METAR:[/b]")
+    print(metarTxt)
+
+print("")
+console.print("* [i]All headings indicated are magnetic.[/i]")
 print("")
