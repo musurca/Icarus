@@ -1,2 +1,2 @@
 @echo off
-python3 metar.py %1
+python metar.py %1

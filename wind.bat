@@ -1,2 +1,2 @@
 @echo off
-python3 wind.py
+python wind.py
